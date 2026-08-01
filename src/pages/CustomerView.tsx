@@ -1,18 +1,13 @@
-﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { Link, useParams } from 'react-router-dom';
 import { useVenue } from '../hooks/useVenue';
 import { useQueue } from '../hooks/useQueue';
 import { useTrackSearch } from '../hooks/useTrackSearch';
-import { useAlbumTracks, useArtistAlbums, useArtistSearch } from '../hooks/useArtistSearch';
 import { SearchBar } from '../components/customer/SearchBar';
 import { SongResult } from '../components/customer/SongResult';
 import { QueueList } from '../components/customer/QueueList';
 import { NowPlayingMini } from '../components/customer/NowPlayingMini';
-import { ArtistCard } from '../components/customer/ArtistCard';
-import { AlbumCard } from '../components/customer/AlbumCard';
-import { Tabs } from '../components/customer/Tabs';
-import { HouseArtistsCard } from '../components/customer/HouseArtistsCard';
 import { TopTracksCard } from '../components/admin/TopTracksCard';
 import { GlowCard } from '../components/common/GlowCard';
 import { AnimatedLogo } from '../components/common/AnimatedLogo';
@@ -22,17 +17,10 @@ import { NeonButton } from '../components/common/NeonButton';
 import { GuideTour, isTourDone, markTourDone } from '../components/customer/GuideTour';
 import { enqueueTrack } from '../lib/api';
 import { extractYoutubeVideoId, isYoutubeProvidedTrack, resolveOnYoutube, youtubeUrlToTrack, ytTrackToResolved } from '../lib/youtube';
-import { useYoutubeFallback } from '../hooks/useYoutubeFallback';
-import type { AlbumResult, ArtistResult } from '../lib/itunes';
 import { getClientId, getClientName, setClientName } from '../utils/formatters';
 import type { TrackSearchResult, Venue } from '../lib/types';
 
 const COOLDOWN_KEY = (vid: string) => `cantina:lastReq:${vid}`;
-type Tab = 'songs' | 'artists';
-type View =
-  | { kind: 'home' }
-  | { kind: 'artist'; artist: ArtistResult }
-  | { kind: 'album'; album: AlbumResult };
 
 export function CustomerView() {
   const { slug } = useParams<{ slug: string }>();
@@ -47,8 +35,6 @@ export function CustomerView() {
 function CustomerInner({ venue }: { venue: Venue }) {
   const { queued, nowPlaying } = useQueue(venue.id);
   const [query, setQuery] = useState('');
-  const [tab, setTab] = useState<Tab>('songs');
-  const [view, setView] = useState<View>({ kind: 'home' });
   const [adding, setAdding] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; kind: 'ok' | 'err' } | null>(null);
   const [name, setNameState] = useState(getClientName() ?? '');
@@ -56,7 +42,6 @@ function CustomerInner({ venue }: { venue: Venue }) {
 
   const clientId = useMemo(() => getClientId(), []);
 
-  // Muestra el guide tour si el cliente nunca lo ha completado
   useEffect(() => {
     if (isTourDone()) return;
     const t = window.setTimeout(() => setShowTour(true), 900);
@@ -89,12 +74,13 @@ function CustomerInner({ venue }: { venue: Venue }) {
       }
       setAdding(track.providerId);
       try {
-        // Si viene del fallback de YouTube, ya tenemos el videoId — saltamos resolver
+        // Los resultados de búsqueda ya vienen resueltos a un video de YouTube
+        // (yt:VIDEOID). Solo el top-tracks (quick-add) puede necesitar resolver.
         const resolved = isYoutubeProvidedTrack(track)
           ? ytTrackToResolved(track)
           : await resolveOnYoutube(track);
         if (!resolved) {
-          showToast('Sin video oficial — usa "Buscar en YouTube" abajo', 'err');
+          showToast('No encontré un video para esa canción', 'err');
           return;
         }
         await enqueueTrack({
@@ -108,16 +94,8 @@ function CustomerInner({ venue }: { venue: Venue }) {
       } catch (e) {
         console.error(e);
         const msg = e instanceof Error ? e.message : '';
-        if (msg.includes('Genero no permitido')) {
-          showToast('Ese género no está permitido por el local', 'err');
-          return;
-        }
-        if (msg.includes('Contenido explicito')) {
-          showToast('Contenido explícito no permitido', 'err');
-          return;
-        }
         if (msg.includes('Cancion bloqueada')) {
-          showToast('Canción bloqueada por el bar', 'err');
+          showToast('Canción bloqueada por el local', 'err');
           return;
         }
         showToast('No pude agregarla, intenta de nuevo', 'err');
@@ -143,62 +121,35 @@ function CustomerInner({ venue }: { venue: Venue }) {
               La música la pones tú
             </p>
           </Link>
-          {/* Botón para reiniciar el tour */}
           <button
-            onClick={() => { setShowTour(true); }}
+            onClick={() => setShowTour(true)}
             title="Ver guía de uso"
             className="shrink-0 text-ink-dim hover:text-gold transition p-1"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="16" x2="12" y2="12"/>
-              <line x1="12" y1="8" x2="12.01" y2="8"/>
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="16" x2="12" y2="12" />
+              <line x1="12" y1="8" x2="12.01" y2="8" />
             </svg>
           </button>
         </div>
       </header>
 
       <main className="max-w-xl mx-auto px-4 pt-4 space-y-4">
-        {view.kind === 'home' && (
-          <HomeView
-            venue={venue}
-            queued={queued}
-            nowPlaying={nowPlaying}
-            clientId={clientId}
-            name={name}
-            onChangeName={(n) => { setNameState(n); setClientName(n); }}
-            query={query}
-            onChangeQuery={setQuery}
-            tab={tab}
-            onChangeTab={setTab}
-            adding={adding}
-            isBlocked={isBlocked}
-            isAlreadyInQueue={isAlreadyInQueue}
-            onAddTrack={handleAdd}
-            onSelectArtist={(a) => setView({ kind: 'artist', artist: a })}
-          />
-        )}
-
-        {view.kind === 'artist' && (
-          <ArtistView
-            artist={view.artist}
-            onBack={() => setView({ kind: 'home' })}
-            onSelectAlbum={(album) => setView({ kind: 'album', album })}
-          />
-        )}
-
-        {view.kind === 'album' && (
-          <AlbumView
-            album={view.album}
-            onBack={() =>
-              setView({ kind: 'artist', artist: { itunesId: view.album.artistId ?? 0, name: view.album.artistName } })
-            }
-            adding={adding}
-            isBlocked={isBlocked}
-            isAlreadyInQueue={isAlreadyInQueue}
-            onAddTrack={handleAdd}
-          />
-        )}
+        <HomeView
+          venue={venue}
+          queued={queued}
+          nowPlaying={nowPlaying}
+          clientId={clientId}
+          name={name}
+          onChangeName={(n) => { setNameState(n); setClientName(n); }}
+          query={query}
+          onChangeQuery={setQuery}
+          adding={adding}
+          isBlocked={isBlocked}
+          isAlreadyInQueue={isAlreadyInQueue}
+          onAddTrack={handleAdd}
+        />
 
         <footer className="pt-10 pb-4 flex flex-col items-center gap-2">
           <AppLogo size={36} />
@@ -217,15 +168,12 @@ function CustomerInner({ venue }: { venue: Venue }) {
 
       {toast && <AnimatedToast msg={toast.msg} kind={toast.kind} />}
 
-      <GuideTour
-        show={showTour}
-        onDone={() => { markTourDone(); setShowTour(false); }}
-      />
+      <GuideTour show={showTour} onDone={() => { markTourDone(); setShowTour(false); }} />
     </div>
   );
 }
 
-/* ─────────────────────────── Subviews ─────────────────────────── */
+/* ─────────────────────────── Home ─────────────────────────── */
 
 interface HomeViewProps {
   venue: Venue;
@@ -236,39 +184,26 @@ interface HomeViewProps {
   onChangeName: (n: string) => void;
   query: string;
   onChangeQuery: (q: string) => void;
-  tab: Tab;
-  onChangeTab: (t: Tab) => void;
   adding: string | null;
   isBlocked: (t: TrackSearchResult) => boolean;
   isAlreadyInQueue: (t: TrackSearchResult) => boolean;
   onAddTrack: (t: TrackSearchResult) => Promise<void>;
-  onSelectArtist: (a: ArtistResult) => void;
 }
 
 function HomeView({
   venue, queued, nowPlaying, clientId, name, onChangeName,
-  query, onChangeQuery, tab, onChangeTab,
-  adding, isBlocked, isAlreadyInQueue, onAddTrack, onSelectArtist,
+  query, onChangeQuery, adding, isBlocked, isAlreadyInQueue, onAddTrack,
 }: HomeViewProps) {
-  const { results: songs, loading: sLoading, error: sError } = useTrackSearch(
-    query,
-    venue.allowExplicit,
-    venue.allowedGenres,
-  );
-  const { results: artists, loading: aLoading } = useArtistSearch(tab === 'artists' ? query : '');
-  const ytFallback = useYoutubeFallback();
-  const showFallbackResults = ytFallback.queriedFor === query.trim() && ytFallback.results.length > 0;
+  // ROCOLA: búsqueda directa en YouTube (scrape, sin cuota).
+  const { results: songs, loading, error } = useTrackSearch(query, venue.allowExplicit, venue.allowedGenres);
 
-  // Stagger de tarjetas cuando termina la búsqueda
-  const songsListRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (sLoading || !songsListRef.current || songs.length === 0) return;
-    gsap.from(songsListRef.current.children, {
-      y: 18, opacity: 0,
-      duration: 0.35, stagger: 0.045, ease: 'power3.out',
-      clearProps: 'all',
+    if (loading || !listRef.current || songs.length === 0) return;
+    gsap.from(listRef.current.children, {
+      y: 18, opacity: 0, duration: 0.35, stagger: 0.045, ease: 'power3.out', clearProps: 'all',
     });
-  }, [sLoading, songs.length]);
+  }, [loading, songs.length]);
 
   return (
     <>
@@ -286,105 +221,39 @@ function HomeView({
 
       {venue.tipEnabled && <TipHint />}
 
-      {query.length >= 2 && (
-        <Tabs<Tab>
-          options={[
-            { value: 'songs', label: 'Canciones' },
-            { value: 'artists', label: 'Artistas' },
-          ]}
-          value={tab}
-          onChange={onChangeTab}
-        />
-      )}
-
-      {sError && tab === 'songs' && (
+      {error && (
         <p className="text-danger text-sm text-center">Error de búsqueda — revisa la conexión</p>
       )}
 
       {query.length >= 2 ? (
-        tab === 'songs' ? (
-          <div className="space-y-2">
-            {sLoading && <p className="text-ink-dim text-center text-sm py-2">Buscando...</p>}
-            {!sLoading && songs.length === 0 && !showFallbackResults && (
-              <EmptyState
-                title="Sin resultados"
-                description={
-                  venue.allowedGenres.length > 0
-                    ? 'Quizás el bar tiene filtros de género activos.'
-                    : 'Prueba con otro nombre o artista'
-                }
-              />
-            )}
-            <div ref={songsListRef} className="space-y-2">
-              {songs.map((t) => {
-                const blocked = isBlocked(t);
-                const dup = isAlreadyInQueue(t);
-                const reason = blocked ? 'Bloqueada por el bar' : dup ? 'Ya está en la cola' : undefined;
-                return (
-                  <SongResult
-                    key={t.providerId}
-                    track={t}
-                    disabled={blocked || dup || adding === t.providerId}
-                    disabledReason={reason}
-                    onAdd={onAddTrack}
-                  />
-                );
-              })}
+        <div className="space-y-2">
+          {loading && <p className="text-ink-dim text-center text-sm py-2">Buscando en YouTube…</p>}
+          {!loading && songs.length === 0 && (
+            <EmptyState title="Sin resultados" description="Prueba con otro nombre o pega el link de YouTube abajo" />
+          )}
+          <div ref={listRef} className="space-y-2">
+            {songs.map((t) => {
+              const blocked = isBlocked(t);
+              const dup = isAlreadyInQueue(t);
+              const reason = blocked ? 'Bloqueada por el local' : dup ? 'Ya está en la cola' : undefined;
+              return (
+                <SongResult
+                  key={t.providerId}
+                  track={t}
+                  disabled={blocked || dup || adding === t.providerId}
+                  disabledReason={reason}
+                  onAdd={onAddTrack}
+                />
+              );
+            })}
+          </div>
+
+          {!loading && (
+            <div className="pt-3">
+              <YoutubeUrlInput onAddTrack={onAddTrack} />
             </div>
-
-            {!sLoading && (
-              <div className="pt-3 space-y-3">
-                {!showFallbackResults ? (
-                  <NeonButton
-                    size="sm"
-                    variant="ghost"
-                    className="w-full"
-                    loading={ytFallback.loading}
-                    onClick={() => ytFallback.run(query)}
-                  >
-                    {songs.length === 0
-                      ? 'Buscar en YouTube'
-                      : '¿No la encuentras? Buscar más en YouTube'}
-                  </NeonButton>
-                ) : (
-                  <>
-                    <p className="text-[10px] uppercase tracking-widest text-gold font-heading mb-2 mt-2">
-                      Resultados YouTube
-                    </p>
-                    <div className="space-y-2">
-                      {ytFallback.results.map((t) => {
-                        const blocked = isBlocked(t);
-                        const dup = isAlreadyInQueue(t);
-                        const reason = blocked ? 'Bloqueada por el bar' : dup ? 'Ya está en la cola' : undefined;
-                        return (
-                          <SongResult
-                            key={t.providerId}
-                            track={t}
-                            disabled={blocked || dup || adding === t.providerId}
-                            disabledReason={reason}
-                            onAdd={onAddTrack}
-                          />
-                        );
-                      })}
-                    </div>
-                  </>
-                )}
-
-                <YoutubeUrlInput onAddTrack={onAddTrack} />
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {aLoading && <p className="text-ink-dim text-center text-sm py-2">Buscando artistas...</p>}
-            {!aLoading && artists.length === 0 && (
-              <EmptyState title="Sin artistas" description="Prueba con otro nombre" />
-            )}
-            {artists.map((a) => (
-              <ArtistCard key={a.itunesId} artist={a} onClick={() => onSelectArtist(a)} />
-            ))}
-          </div>
-        )
+          )}
+        </div>
       ) : (
         <>
           <GlowCard>
@@ -394,11 +263,9 @@ function HomeView({
             <QueueList items={queued} highlightClientId={clientId} />
           </GlowCard>
 
-          <HouseArtistsCard onSelectArtist={onSelectArtist} />
-
           <TopTracksCard
             venueId={venue.id}
-            title="Más pedidas en el bar"
+            title="Más pedidas"
             limit={10}
             onAddTrack={onAddTrack}
             disabledIds={
@@ -415,78 +282,9 @@ function HomeView({
   );
 }
 
-function ArtistView({
-  artist, onBack, onSelectAlbum,
-}: {
-  artist: ArtistResult;
-  onBack: () => void;
-  onSelectAlbum: (a: AlbumResult) => void;
-}) {
-  const { albums, loading } = useArtistAlbums(artist.itunesId);
-  return (
-    <>
-      <BackHeader onBack={onBack} title={artist.name} subtitle={artist.primaryGenreName ?? 'Artista'} />
-      {loading && <p className="text-ink-dim text-center text-sm py-4">Cargando álbumes...</p>}
-      {!loading && albums.length === 0 && (
-        <EmptyState title="Sin álbumes" description="Este artista no tiene álbumes en el catálogo" />
-      )}
-      <div className="space-y-2">
-        {albums.map((a) => (
-          <AlbumCard key={a.itunesId} album={a} onClick={() => onSelectAlbum(a)} />
-        ))}
-      </div>
-    </>
-  );
-}
+/* ─────────────────────────── Pegar link YouTube ─────────────────────────── */
 
-function AlbumView({
-  album, onBack, adding, isBlocked, isAlreadyInQueue, onAddTrack,
-}: {
-  album: AlbumResult;
-  onBack: () => void;
-  adding: string | null;
-  isBlocked: (t: TrackSearchResult) => boolean;
-  isAlreadyInQueue: (t: TrackSearchResult) => boolean;
-  onAddTrack: (t: TrackSearchResult) => Promise<void>;
-}) {
-  const { tracks, loading } = useAlbumTracks(album.itunesId);
-  const year = album.releaseDate?.slice(0, 4);
-  return (
-    <>
-      <BackHeader onBack={onBack} title={album.name} subtitle={`${album.artistName}${year ? ` · ${year}` : ''}`} />
-      {album.imageUrl && (
-        <div className="flex justify-center">
-          <img src={album.imageUrl} alt="" className="w-48 h-48 rounded-2xl shadow-gold" />
-        </div>
-      )}
-      {loading && <p className="text-ink-dim text-center text-sm py-4">Cargando canciones...</p>}
-      <div className="space-y-2">
-        {tracks.map((t) => {
-          const blocked = isBlocked(t);
-          const dup = isAlreadyInQueue(t);
-          const reason = blocked ? 'Bloqueada por el bar' : dup ? 'Ya está en la cola' : undefined;
-          return (
-            <SongResult
-              key={t.providerId}
-              track={t}
-              disabled={blocked || dup || adding === t.providerId}
-              disabledReason={reason}
-              onAdd={onAddTrack}
-            />
-          );
-        })}
-      </div>
-    </>
-  );
-}
-
-/** Input para pegar URL de YouTube directo. Útil cuando ni iTunes ni el
- * search de YouTube encuentran la canción (catálogo nicho, releases nuevos). */
-function YoutubeUrlInput({
-  onAddTrack,
-}: {
-  onAddTrack: (t: TrackSearchResult) => Promise<void>;
-}) {
+function YoutubeUrlInput({ onAddTrack }: { onAddTrack: (t: TrackSearchResult) => Promise<void> }) {
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -516,10 +314,7 @@ function YoutubeUrlInput({
   return (
     <div
       className="rounded-xl p-3"
-      style={{
-        background: 'rgba(18,18,31,0.70)',
-        border: '1px solid rgba(168,85,247,0.20)',
-      }}
+      style={{ background: 'rgba(18,18,31,0.70)', border: '1px solid rgba(168,85,247,0.20)' }}
     >
       <p className="text-[10px] uppercase tracking-widest text-gold font-heading mb-2">
         ¿Tienes el link de YouTube?
@@ -533,13 +328,7 @@ function YoutubeUrlInput({
           className="flex-1 bg-base-card/60 border border-base-border rounded-lg px-3 py-2 text-xs text-ink placeholder:text-ink-dim outline-none focus:border-gold/50 font-mono"
           disabled={loading}
         />
-        <NeonButton
-          size="sm"
-          variant="primary"
-          onClick={handleAdd}
-          disabled={!valid}
-          loading={loading}
-        >
+        <NeonButton size="sm" variant="primary" onClick={handleAdd} disabled={!valid} loading={loading}>
           Agregar
         </NeonButton>
       </div>
@@ -551,8 +340,6 @@ function YoutubeUrlInput({
   );
 }
 
-/** Banner informativo: el cliente NO puede activar tip desde la app — debe
- * acercarse físicamente al barman con la propina. Esto solo se lo cuenta. */
 function TipHint() {
   return (
     <div
@@ -575,25 +362,13 @@ function TipHint() {
   );
 }
 
-function BackHeader({ onBack, title, subtitle }: { onBack: () => void; title: string; subtitle?: string }) {
-  return (
-    <div className="flex items-center gap-3">
-      <NeonButton size="sm" variant="ghost" onClick={onBack}>← Volver</NeonButton>
-      <div className="flex-1 min-w-0">
-        <p className="text-ink font-display text-lg truncate">{title}</p>
-        {subtitle && <p className="text-ink-mute text-xs truncate">{subtitle}</p>}
-      </div>
-    </div>
-  );
-}
-
 function AnimatedToast({ msg, kind }: { msg: string; kind: 'ok' | 'err' }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!ref.current) return;
     gsap.fromTo(ref.current,
       { y: 48, opacity: 0, scale: 0.88 },
-      { y: 0,  opacity: 1, scale: 1, duration: 0.38, ease: 'back.out(1.8)' }
+      { y: 0, opacity: 1, scale: 1, duration: 0.38, ease: 'back.out(1.8)' },
     );
   }, []);
   return (
@@ -619,7 +394,7 @@ const NotFoundView = () => (
   <div className="min-h-screen grid place-items-center px-6">
     <EmptyState
       title="Local no encontrado"
-      description="Verifica el código QR o pídele al bar uno nuevo"
+      description="Verifica el código QR o pídele al local uno nuevo"
     />
   </div>
 );

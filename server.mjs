@@ -611,56 +611,7 @@ app.get('/api/youtube-videos', ytLimiter, async (req, res) => {
   res.status(out.status).json(out.data);
 });
 
-// ─── iTunes proxy ──────────────────────────────────────────────────────────────
-app.get('/api/itunes-search', itunesLimiter, async (req, res) => {
-  const term = String(req.query.term ?? '');
-  if (!term) return res.status(400).json({ error: 'Missing required parameter: term' });
-  const limit = String(req.query.limit ?? '20');
-  const country = String(req.query.country ?? 'US');
-  const allowExplicit = req.query.allowExplicit !== 'false';
-  const params = new URLSearchParams({
-    term, media: 'music', entity: 'song', country, limit,
-    explicit: allowExplicit ? 'Yes' : 'No',
-  });
-  const out = await cachedProxy(itunesCache, `${term}|${limit}|${country}|${allowExplicit}`,
-    () => fetchJsonRetry(`https://itunes.apple.com/search?${params}`, { headers: { 'User-Agent': 'CantinaMusica/1.0' } }),
-    itunesOk);
-  // Nunca devolver error de búsqueda al cliente: si upstream falló y no hay
-  // cache, devolvemos set vacío (la UI ofrece "Buscar en YouTube") en vez de
-  // "Error de búsqueda — revisa la conexión".
-  if (out.status < 200 || out.status >= 300 || !itunesOk(out.data)) {
-    return res.json({ resultCount: 0, results: [] });
-  }
-  res.json(out.data);
-});
-
-// ─── Last.fm proxies ───────────────────────────────────────────────────────────
-app.get('/api/lastfm-artist', lastfmLimiter, async (req, res) => {
-  if (!LASTFM_API_KEY) return res.status(500).json({ error: 'Last.fm API key not configured' });
-  const artist = String(req.query.artist ?? '');
-  if (!artist) return res.status(400).json({ error: 'Missing required parameter: artist' });
-  const params = new URLSearchParams({
-    method: 'artist.getInfo', api_key: LASTFM_API_KEY, artist, format: 'json', autocorrect: '1',
-  });
-  const out = await cachedProxy(lastfmCache, `artist|${artist.toLowerCase()}`,
-    () => fetchJsonRetry(`${LASTFM_API}?${params}`), lastfmOk);
-  res.status(out.status).json(out.data);
-});
-
-app.get('/api/lastfm-track', lastfmLimiter, async (req, res) => {
-  if (!LASTFM_API_KEY) return res.status(500).json({ error: 'Last.fm API key not configured' });
-  const method = String(req.query.method ?? '');
-  const artist = String(req.query.artist ?? '');
-  const track = String(req.query.track ?? '');
-  if (!method || !artist || !track)
-    return res.status(400).json({ error: 'Missing required parameters: method, artist, track' });
-  const params = new URLSearchParams({
-    method, api_key: LASTFM_API_KEY, artist, track, format: 'json', autocorrect: '1',
-  });
-  const out = await cachedProxy(lastfmCache, `track|${artist.toLowerCase()}|${track.toLowerCase()}`,
-    () => fetchJsonRetry(`${LASTFM_API}?${params}`), lastfmOk);
-  res.status(out.status).json(out.data);
-});
+// iTunes y Last.fm: ELIMINADOS en ROCOLA — la única fuente es YouTube (scrape).
 
 // ─── Data API (PostgreSQL) ───────────────────────────────────────────────────
 app.get('/api/venues', dataLimiter, async (req, res) => {
