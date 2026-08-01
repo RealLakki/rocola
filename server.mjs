@@ -274,7 +274,7 @@ async function youtubeSearchScrape(query, maxResults = 25) {
   try {
     // sp=EgIQAQ%3D%3D → filtro "solo videos" (evita canales/playlists).
     const url = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}&sp=EgIQAQ%253D%253D`;
-    const r = await fetch(url, { headers: { 'User-Agent': YT_UA, 'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8' } });
+    const r = await fetch(url, { headers: { 'User-Agent': YT_UA, 'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8', 'Cookie': 'SOCS=CAI' } });
     if (!r.ok) return null;
     const data = parseYtInitialData(await r.text());
     if (!data) return null;
@@ -315,7 +315,7 @@ async function youtubeSearchScrape(query, maxResults = 25) {
 async function youtubeVideoScrape(videoId) {
   try {
     const r = await fetch(`https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`, {
-      headers: { 'User-Agent': YT_UA, 'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8' },
+      headers: { 'User-Agent': YT_UA, 'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8', 'Cookie': 'SOCS=CAI' },
     });
     if (!r.ok) return null;
     const html = await r.text();
