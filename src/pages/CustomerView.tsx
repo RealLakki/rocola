@@ -94,6 +94,10 @@ function CustomerInner({ venue }: { venue: Venue }) {
       } catch (e) {
         console.error(e);
         const msg = e instanceof Error ? e.message : '';
+        if (msg.includes('Genero no permitido')) {
+          showToast('Ese género no va con el local 🚫', 'err');
+          return;
+        }
         if (msg.includes('Cancion bloqueada')) {
           showToast('Canción bloqueada por el local', 'err');
           return;
