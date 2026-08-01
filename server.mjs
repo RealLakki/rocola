@@ -213,7 +213,7 @@ async function youtubeFetch(endpoint, paramsObj) {
   for (const key of order) {
     const qs = new URLSearchParams({ ...paramsObj, key });
     const res = await fetchJsonRetry(`${YT_API}/${endpoint}?${qs}`, {
-      headers: { Referer: 'https://musica.wailus.co/' },
+      headers: { Referer: 'https://rocola.wailus.co/' },
     });
     if (res.status >= 200 && res.status < 300 && !res.data?.error) return res;
     if (isYtQuotaError(res.status, res.data)) {
@@ -580,16 +580,17 @@ app.get('/api/youtube-search', ytLimiter, async (req, res) => {
   const q = String(req.query.q ?? '');
   const maxResults = String(req.query.maxResults ?? '25');
   if (!q) return res.status(400).json({ error: 'Missing parameter: q' });
-  // Si hay keys: API oficial primero (calidad), scrape como fallback por cuota.
-  // Si NO hay keys (modo scrape-only): scrape directo, sin cuota. En ambos casos
-  // el scrape ocurre dentro del fetcher → se cachea y no dispara el circuit breaker.
+  // ROCOLA: SCRAPE primero (gratis, no gasta cuota). La API key es solo RESPALDO
+  // si el scrape falla (p.ej. YouTube bloquea la IP). Así los 100/día quedan
+  // intactos para emergencias. Todo dentro del fetcher → se cachea.
   const out = await cachedProxy(ytSearchCache, `${q}|${maxResults}`, async () => {
+    const scraped = await youtubeSearchScrape(q, Number(maxResults) || 25);
+    if (scraped) return { status: 200, data: scraped };
+    // Respaldo: API oficial (consume cuota, solo cuando el scrape no responde).
     if (YT_KEYS.length) {
       const api = await youtubeFetch('search', { part: 'snippet', type: 'video', videoCategoryId: '10', maxResults, q });
       if (api.status >= 200 && api.status < 300 && ytOk(api.data)) return api;
     }
-    const scraped = await youtubeSearchScrape(q, Number(maxResults) || 25);
-    if (scraped) return { status: 200, data: scraped };
     return { status: 503, data: { error: 'youtube unavailable' } };
   }, ytOk);
   res.status(out.status).json(out.data);
@@ -599,13 +600,13 @@ app.get('/api/youtube-videos', ytLimiter, async (req, res) => {
   const id = String(req.query.id ?? '');
   if (!id) return res.status(400).json({ error: 'Missing parameter: id' });
   const out = await cachedProxy(ytVideosCache, id, async () => {
+    // SCRAPE primero (para links pegados), API key como respaldo.
+    const scraped = await youtubeVideoScrape(id.split(',')[0]);
+    if (scraped) return { status: 200, data: scraped };
     if (YT_KEYS.length) {
       const api = await youtubeFetch('videos', { part: 'snippet,contentDetails,statistics', id });
       if (api.status >= 200 && api.status < 300 && ytOk(api.data)) return api;
     }
-    // Modo scrape-only: detalle de un video (para links pegados) sin cuota.
-    const scraped = await youtubeVideoScrape(id.split(',')[0]);
-    if (scraped) return { status: 200, data: scraped };
     return { status: 503, data: { error: 'youtube unavailable' } };
   }, ytOk);
   res.status(out.status).json(out.data);
