@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body, #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-base text-ink font-sans antialiased;
+    /* Aurora neon en la parte superior sobre azul-negro profundo */
+    background-image:
+      radial-gradient(ellipse 90% 50% at 50% -10%, rgba(168,85,247,0.22), transparent 60%),
+      radial-gradient(ellipse 60% 45% at 100% 0%, rgba(34,211,238,0.12), transparent 55%),
+      radial-gradient(ellipse 50% 45% at 0% 100%, rgba(251,44,107,0.10), transparent 60%);
+    background-attachment: fixed;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Scrollbar neon */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(168,85,247,0.6), rgba(34,211,238,0.6));
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(168,85,247,0.85); }
+
+  ::selection { background: rgba(168,85,247,0.40); color: #ECECFF; }
+}
+
+@layer components {
+  .glass {
+    background-color: rgba(18, 18, 31, 0.6);
+    backdrop-filter: blur(18px) saturate(1.3);
+    -webkit-backdrop-filter: blur(18px) saturate(1.3);
+    border: 1px solid rgba(168, 85, 247, 0.18);
+  }
+  .glass-elevated {
+    background-color: rgba(18, 18, 31, 0.85);
+    backdrop-filter: blur(26px) saturate(1.4);
+    -webkit-backdrop-filter: blur(26px) saturate(1.4);
+    border: 1px solid rgba(168, 85, 247, 0.30);
+  }
+  .gold-text {
+    background: linear-gradient(120deg, #C084FC, #22D3EE);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 0 24px rgba(168, 85, 247, 0.45);
+  }
+  .gold-border {
+    border: 1px solid rgba(168, 85, 247, 0.5);
+    box-shadow: 0 0 16px rgba(168,85,247,0.30), inset 0 0 12px rgba(34,211,238,0.08);
+  }
+  .grid-bg {
+    background-image:
+      linear-gradient(rgba(168,85,247,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(34,211,238,0.06) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+  .card-neon {
+    transition: box-shadow 0.3s ease, border-color 0.3s ease, transform 0.2s ease;
+  }
+  .card-neon:hover {
+    box-shadow: 0 0 24px rgba(168,85,247,0.35), 0 0 48px rgba(34,211,238,0.15);
+    border-color: rgba(168,85,247,0.6) !important;
+    transform: translateY(-2px);
+  }
+}
