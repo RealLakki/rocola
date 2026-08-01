@@ -498,9 +498,21 @@ const normalizeTags = (tags) =>
     .map((t) => String(t?.name ?? t).toLowerCase().trim())
     .filter((t) => t.length > 1);
 
+// Normaliza al artista PRINCIPAL para clasificar género: quita featurings/combos
+// ("Bad Bunny x Jhay Cortez" -> "Bad Bunny", "Karol G, Feid" -> "Karol G",
+// "X - Topic" -> "X"). Sin esto, Last.fm no reconoce el string combinado y el
+// filtro deja pasar de más.
+function primaryArtist(name) {
+  return String(name ?? '')
+    .replace(/\s*[-–—]\s*topic\s*$/i, '')
+    .replace(/\([^)]*\)|\[[^\]]*\]/g, '')
+    .split(/\s*(?:,|&|\/|\||\s+x\s+|\bfeat\.?\b|\bft\.?\b|\bfeaturing\b|\bcon\b|\bvs\.?\b)\s*/i)[0]
+    .trim();
+}
+
 async function fetchLastfmValidationTags(track) {
   if (!LASTFM_API_KEY) return [];
-  const artist = String(track?.artists?.[0] ?? '').trim();
+  const artist = primaryArtist(track?.artists?.[0]);
   const title = String(track?.title ?? '').trim();
   if (!artist || !title) return [];
 
