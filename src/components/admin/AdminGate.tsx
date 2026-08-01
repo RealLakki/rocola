@@ -4,7 +4,7 @@ import anime from 'animejs';
 import { AppLogo } from '../common/AppLogo';
 import { NeonButton } from '../common/NeonButton';
 
-const ADMIN_PASSWORD = '3123';
+const ADMIN_PASSWORD = '5500';
 
 interface Props {
   children: ReactNode;
