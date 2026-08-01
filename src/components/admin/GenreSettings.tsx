@@ -35,7 +35,7 @@ export function GenreSettings({ venue, onUpdate }: Props) {
         </span>
       </div>
       <p className="text-ink-mute text-xs mb-3">
-        Modo cantina permite solo despecho y regional. Hora loca abre todos los géneros temporalmente.
+        Modo normal permite solo la música del local. Hora loca abre todos los géneros temporalmente.
       </p>
       <div className="grid grid-cols-2 gap-2 mb-3">
         <button
@@ -48,7 +48,7 @@ export function GenreSettings({ venue, onUpdate }: Props) {
               : 'bg-base-card border-base-border text-ink-mute hover:border-gold/40 hover:text-ink',
           ].join(' ')}
         >
-          Modo cantina
+          Modo normal
         </button>
         <button
           type="button"
