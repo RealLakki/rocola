@@ -576,15 +576,51 @@ async function validateQueueRequest(venue, track) {
 }
 
 // ─── YouTube proxy ─────────────────────────────────────────────────────────────
+// ── Throttle del scrape ──────────────────────────────────────────────────────
+// La IP del VPS (datacenter) se gana un soft-ban de YouTube si scrapea con
+// concurrencia/ráfaga. Serializamos los scrapes (1 a la vez) con una separación
+// mínima para "portarnos humanos". Si se acumula demasiada cola, esas requests
+// desbordan a la API (devolvemos null → el handler cae a la API key).
+const SCRAPE_CONCURRENCY = 1;
+const SCRAPE_MAX_QUEUE = 12;
+const SCRAPE_MIN_GAP_MS = 300;
+let scrapeActive = 0;
+let lastScrapeAt = 0;
+const scrapeQueue = [];
+function runScrapeLimited(fn) {
+  // Sobrecarga → no encolar más; que el handler use la API de respaldo.
+  if (scrapeActive >= SCRAPE_CONCURRENCY && scrapeQueue.length >= SCRAPE_MAX_QUEUE) {
+    return Promise.resolve(null);
+  }
+  return new Promise((resolve) => {
+    const task = async () => {
+      scrapeActive++;
+      try {
+        const gap = SCRAPE_MIN_GAP_MS - (Date.now() - lastScrapeAt);
+        if (gap > 0) await sleep(gap);
+        lastScrapeAt = Date.now();
+        resolve(await fn());
+      } catch {
+        resolve(null);
+      } finally {
+        scrapeActive--;
+        const next = scrapeQueue.shift();
+        if (next) next();
+      }
+    };
+    if (scrapeActive < SCRAPE_CONCURRENCY) task();
+    else scrapeQueue.push(task);
+  });
+}
+
 app.get('/api/youtube-search', ytLimiter, async (req, res) => {
   const q = String(req.query.q ?? '');
   const maxResults = String(req.query.maxResults ?? '25');
   if (!q) return res.status(400).json({ error: 'Missing parameter: q' });
-  // ROCOLA: SCRAPE primero (gratis, no gasta cuota). La API key es solo RESPALDO
-  // si el scrape falla (p.ej. YouTube bloquea la IP). Así los 100/día quedan
-  // intactos para emergencias. Todo dentro del fetcher → se cachea.
+  // ROCOLA: SCRAPE primero (gratis, no gasta cuota), serializado para no gatillar
+  // el ban de IP. La API key es solo RESPALDO si el scrape falla o se satura.
   const out = await cachedProxy(ytSearchCache, `${q}|${maxResults}`, async () => {
-    const scraped = await youtubeSearchScrape(q, Number(maxResults) || 25);
+    const scraped = await runScrapeLimited(() => youtubeSearchScrape(q, Number(maxResults) || 25));
     if (scraped) return { status: 200, data: scraped };
     // Respaldo: API oficial (consume cuota, solo cuando el scrape no responde).
     if (YT_KEYS.length) {
@@ -600,8 +636,8 @@ app.get('/api/youtube-videos', ytLimiter, async (req, res) => {
   const id = String(req.query.id ?? '');
   if (!id) return res.status(400).json({ error: 'Missing parameter: id' });
   const out = await cachedProxy(ytVideosCache, id, async () => {
-    // SCRAPE primero (para links pegados), API key como respaldo.
-    const scraped = await youtubeVideoScrape(id.split(',')[0]);
+    // SCRAPE primero (para links pegados), serializado; API key como respaldo.
+    const scraped = await runScrapeLimited(() => youtubeVideoScrape(id.split(',')[0]));
     if (scraped) return { status: 200, data: scraped };
     if (YT_KEYS.length) {
       const api = await youtubeFetch('videos', { part: 'snippet,contentDetails,statistics', id });
