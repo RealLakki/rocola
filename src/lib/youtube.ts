@@ -170,8 +170,8 @@ export async function youtubeSearchAsTracks(query: string): Promise<TrackSearchR
   return usable.slice(0, 12).map((c) => {
     const isTopic = TOPIC.test(c.channelTitle);
     // Parseamos "Artista - Titulo" del título de YouTube si lo tiene formato común
-    const dashSplit = c.title.split(/\s+[-–—]\s+/);
-    let artist = c.channelTitle.replace(/VEVO$/i, '').replace(/Music$/i, '').trim();
+    const dashSplit = c.title.split(/\s*[-–—]\s+|\s+[-–—]\s*/);
+    let artist = c.channelTitle.replace(/\s*-\s*topic$/i, '').replace(/VEVO$/i, '').replace(/Music$/i, '').trim();
     let title = c.title;
     if (dashSplit.length >= 2) {
       // "Karol G - PROVENZA (Official Video)" → artist="Karol G", title="PROVENZA"
@@ -179,8 +179,8 @@ export async function youtubeSearchAsTracks(query: string): Promise<TrackSearchR
       title = dashSplit.slice(1).join(' - ').trim();
     }
     // Limpia sufijos comunes
-    title = title.replace(/\s*\((official|video|audio|music|lyric|hd|4k)[^)]*\)\s*/gi, '').trim();
-    title = title.replace(/\s*\[(official|video|audio|music|lyric|hd|4k)[^\]]*\]\s*/gi, '').trim();
+    title = title.replace(/\s*\((official|video|audio|music|lyric|lyrics|letra|letras|hd|4k)[^)]*\)\s*/gi, '').trim();
+    title = title.replace(/\s*\[(official|video|audio|music|lyric|lyrics|letra|letras|hd|4k)[^\]]*\]\s*/gi, '').trim();
 
     return {
       providerId: `${isTopic ? YT_AUDIO_PROVIDER_PREFIX : YT_PROVIDER_PREFIX}${c.videoId}`,
@@ -249,14 +249,14 @@ export async function youtubeUrlToTrack(input: string): Promise<TrackSearchResul
 
   // Parseamos "Artista - Titulo" del título
   const dashSplit = c.title.split(/\s+[-–—]\s+/);
-  let artist = c.channelTitle.replace(/VEVO$/i, '').replace(/Music$/i, '').trim();
+  let artist = c.channelTitle.replace(/\s*-\s*topic$/i, '').replace(/VEVO$/i, '').replace(/Music$/i, '').trim();
   let title = c.title;
   if (dashSplit.length >= 2) {
     artist = dashSplit[0].trim();
     title = dashSplit.slice(1).join(' - ').trim();
   }
-  title = title.replace(/\s*\((official|video|audio|music|lyric|hd|4k)[^)]*\)\s*/gi, '').trim();
-  title = title.replace(/\s*\[(official|video|audio|music|lyric|hd|4k)[^\]]*\]\s*/gi, '').trim();
+  title = title.replace(/\s*\((official|video|audio|music|lyric|lyrics|letra|letras|hd|4k)[^)]*\)\s*/gi, '').trim();
+  title = title.replace(/\s*\[(official|video|audio|music|lyric|lyrics|letra|letras|hd|4k)[^\]]*\]\s*/gi, '').trim();
 
   return {
     providerId: `${isTopic ? YT_AUDIO_PROVIDER_PREFIX : YT_PROVIDER_PREFIX}${videoId}`,

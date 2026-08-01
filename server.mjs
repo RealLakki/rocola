@@ -510,43 +510,44 @@ function primaryArtist(name) {
     .trim();
 }
 
-async function fetchLastfmValidationTags(track) {
-  if (!LASTFM_API_KEY) return [];
-  const artist = primaryArtist(track?.artists?.[0]);
-  const title = String(track?.title ?? '').trim();
-  if (!artist || !title) return [];
-
+async function lastfmTagsFor(artist, title) {
   const trackParams = new URLSearchParams({
-    method: 'track.getInfo',
-    api_key: LASTFM_API_KEY,
-    artist,
-    track: title,
-    format: 'json',
-    autocorrect: '1',
+    method: 'track.getInfo', api_key: LASTFM_API_KEY, artist, track: title, format: 'json', autocorrect: '1',
   });
   const trackOut = await cachedProxy(
-    lastfmCache,
-    `validate-track|${artist.toLowerCase()}|${title.toLowerCase()}`,
-    () => fetchJsonRetry(`${LASTFM_API}?${trackParams}`),
-    lastfmOk,
+    lastfmCache, `validate-track|${artist.toLowerCase()}|${title.toLowerCase()}`,
+    () => fetchJsonRetry(`${LASTFM_API}?${trackParams}`), lastfmOk,
   );
   const trackTags = normalizeTags(trackOut.data?.track?.toptags?.tag);
   if (trackTags.length > 0) return trackTags;
 
   const artistParams = new URLSearchParams({
-    method: 'artist.getInfo',
-    api_key: LASTFM_API_KEY,
-    artist,
-    format: 'json',
-    autocorrect: '1',
+    method: 'artist.getInfo', api_key: LASTFM_API_KEY, artist, format: 'json', autocorrect: '1',
   });
   const artistOut = await cachedProxy(
-    lastfmCache,
-    `validate-artist|${artist.toLowerCase()}`,
-    () => fetchJsonRetry(`${LASTFM_API}?${artistParams}`),
-    lastfmOk,
+    lastfmCache, `validate-artist|${artist.toLowerCase()}`,
+    () => fetchJsonRetry(`${LASTFM_API}?${artistParams}`), lastfmOk,
   );
   return normalizeTags(artistOut.data?.artist?.tags?.tag);
+}
+
+async function fetchLastfmValidationTags(track) {
+  if (!LASTFM_API_KEY) return [];
+  const title = String(track?.title ?? '').trim();
+  if (!title) return [];
+  // Candidatos de artista para clasificar: el parseado + (respaldo) el primer
+  // segmento del título "Artista - Canción", por si el artista vino mal
+  // (canal de letras, combo raro, etc.).
+  const a1 = primaryArtist(track?.artists?.[0]);
+  const a2 = /[-–—]/.test(title)
+    ? primaryArtist(title.split(/\s*[-–—]\s+|\s+[-–—]\s*/)[0])
+    : '';
+  const candidates = [...new Set([a1, a2].filter((x) => x && x.length >= 2))];
+  for (const artist of candidates) {
+    const tags = await lastfmTagsFor(artist, title);
+    if (tags.length > 0) return tags;
+  }
+  return [];
 }
 
 async function validateQueueRequest(venue, track) {
