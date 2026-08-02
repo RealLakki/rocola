@@ -391,8 +391,24 @@ const POPULAR_ARTISTS = [
   'john alex castaño',
 ];
 
+// Lista negra de artistas urbanos/reggaetón/trap conocidos. Last.fm no siempre
+// los etiqueta (p.ej. Blessd trae solo "Colombia"), así que se bloquean por
+// nombre. Match EXACTO tras normalizar para no tumbar permitidos por accidente.
+// NO incluye corridos tumbados (Peso Pluma, Natanael Cano, etc.) que SÍ van.
+const URBAN_ARTISTS = new Set([
+  'blessd', 'ryan castro', 'feid', 'ferxxo', 'kris r', 'kris r.', 'kapo', 'beele',
+  'ovy on the drums', 'j balvin', 'maluma', 'ozuna', 'anuel', 'anuel aa', 'karol g',
+  'bad bunny', 'rauw alejandro', 'myke towers', 'sech', 'jhayco', 'jhay cortez',
+  'arcangel', 'farruko', 'wisin', 'yandel', 'wisin y yandel', 'daddy yankee',
+  'nicky jam', 'don omar', 'tego calderon', 'residente', 'mora', 'saiko', 'quevedo',
+  'young miko', 'tokischa', 'de la ghetto', 'nengo flow', 'zion', 'zion y lennox',
+  'cosculluela', 'bryant myers', 'lunay', 'dalex', 'brray', 'eladio carrion',
+  'duki', 'bizarrap', 'rels b', 'justin quiles', 'manuel turizo', 'omar montes',
+  'bad gyal', 'w sound', 'lyanno', 'dei v', 'luar la l',
+].map((n) => n.normalize('NFD').replace(/[̀-ͯ]/g, '')));
+
 const GENRE_LASTFM_TAGS = {
-  reggaeton: ['reggaeton', 'reggaetón', 'perreo', 'urbano latino', 'latin urban', 'trap latino', 'reggaeton colombiano'],
+  reggaeton: ['reggaeton', 'reggaetón', 'perreo', 'urbano', 'urbano latino', 'musica urbana', 'música urbana', 'urban latin', 'latin urban', 'trap latino', 'latin trap', 'reggaeton colombiano', 'reggaeton y hip-hop'],
   salsa: ['salsa', 'salsa colombiana', 'salsa cubana', 'salsa choke'],
   merengue: ['merengue'],
   bachata: ['bachata', 'bachata moderna'],
@@ -444,6 +460,12 @@ function knownPopularArtist(artistName) {
   if (!artistName) return false;
   const artist = normalizeGenreText(artistName);
   return POPULAR_ARTISTS.some((name) => artist.includes(normalizeGenreText(name)));
+}
+
+// Match EXACTO (tras normalizar) contra la lista negra urbana.
+function knownUrbanArtist(artistName) {
+  if (!artistName) return false;
+  return URBAN_ARTISTS.has(normalizeGenreText(artistName));
 }
 
 function genreAllowed(itunesGenre, allowedGenres) {
@@ -570,6 +592,19 @@ async function validateQueueRequest(venue, track) {
     return venue.allowedGenres.includes(curated.genre)
       ? { ok: true }
       : { ok: false, status: 422, error: 'Genero no permitido por el local' };
+  }
+
+  // Lista negra de urbanos conocidos: si el local NO permite reggaetón (proxy
+  // de "urbano"), se rechazan de una — aunque Last.fm no los sepa clasificar.
+  if (!venue.allowedGenres.includes('reggaeton')) {
+    const rawTitle = String(track?.title ?? '');
+    const pa = primaryArtist(track?.artists?.[0]);
+    const pt = /[-–—]/.test(rawTitle)
+      ? primaryArtist(rawTitle.split(/\s*[-–—]\s+|\s+[-–—]\s*/)[0])
+      : '';
+    if (knownUrbanArtist(pa) || knownUrbanArtist(pt)) {
+      return { ok: false, status: 422, error: 'Genero no permitido por el local' };
+    }
   }
 
   const tags = await fetchLastfmValidationTags(track);
