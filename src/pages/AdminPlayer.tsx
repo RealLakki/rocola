@@ -350,7 +350,12 @@ function PlayerSurface({ venue }: { venue: Venue }) {
   // Arrancar tarda mas que seguir sonando: en el WiFi de un bar un video puede
   // pasar varios segundos en BUFFERING sin estar roto. Se le da mas margen al
   // caso "aun no empieza" que al caso "venia sonando y se congelo".
-  const STUCK_START_TIMEOUT_MS = 12000;
+  //
+  // 8s es un compromiso: un video bloqueado desaparece rapido de la pantalla,
+  // a costa de que un arranque que tarde mas de ~8s en una red mala se salte
+  // sin estar roto. Los bloqueados normalmente ni llegan aca — el handler de
+  // onError los caza al precargarlos, antes de que suenen.
+  const STUCK_START_TIMEOUT_MS = 8000;
   const STUCK_PLAYBACK_OK_THRESHOLD_SEC = 5;
   const STUCK_MAX_CASCADE = 3;
   const STUCK_CHECK_MS = 1000;
