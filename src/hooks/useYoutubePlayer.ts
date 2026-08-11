@@ -68,6 +68,16 @@ function whenApiReady(): Promise<void> {
 export interface PlayerState {
   isReady: boolean;
   isPlaying: boolean;
+  /**
+   * Estado crudo de YT.PlayerState: -1 sin empezar, 0 terminado, 1 sonando,
+   * 2 pausado, 3 buffering, 5 cued.
+   *
+   * `isPlaying` no alcanza para decidir si un video está atascado: vale false
+   * tanto cuando el admin pausó (legítimo, no hay que saltar) como cuando el
+   * video nunca arrancó porque está bloqueado (hay que saltar). Solo el estado
+   * crudo distingue PAUSED de UNSTARTED/CUED/BUFFERING.
+   */
+  playerState: number;
   currentTimeSec: number;
   durationSec: number;
   /**
@@ -93,16 +103,19 @@ export function useYoutubePlayer(): {
   state: PlayerState;
   controls: PlayerControls;
   onEnded: (cb: () => void) => () => void;
-  onError: (cb: (code: number) => void) => () => void;
+  onError: (cb: (code: number, videoId: string | null) => void) => () => void;
 } {
   const containerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<YT.Player | null>(null);
   const endedHandlersRef = useRef<Set<() => void>>(new Set());
-  const errorHandlersRef = useRef<Set<(code: number) => void>>(new Set());
+  const errorHandlersRef = useRef<Set<(code: number, videoId: string | null) => void>>(new Set());
   const tickRef = useRef<number | null>(null);
+  /** Ultimo videoId que se mando a este player (load o cue). */
+  const loadedVideoIdRef = useRef<string | null>(null);
   const [state, setState] = useState<PlayerState>({
     isReady: false,
     isPlaying: false,
+    playerState: -1,
     currentTimeSec: 0,
     durationSec: 0,
     apiError: null,
@@ -164,19 +177,24 @@ export function useYoutubePlayer(): {
           onStateChange: (e) => {
             if (destroyed) return;
             const playing = e.data === YT.PlayerState.PLAYING;
-            setState((s) => ({ ...s, isPlaying: playing }));
+            setState((s) => ({ ...s, isPlaying: playing, playerState: Number(e.data) }));
             if (e.data === YT.PlayerState.ENDED) {
               endedHandlersRef.current.forEach((cb) => cb());
             }
           },
           onError: (e) => {
+            // El video que fallo puede no ser el que suena: los errores de
+            // embed bloqueado saltan al CUEAR (durante la precarga), no al
+            // reproducir. Sin el id, quien escucha no sabe a que item de la
+            // cola corresponde.
+            const failedVideoId = loadedVideoIdRef.current;
             // Códigos comunes:
             // 2  = invalid parameter
             // 5  = HTML5 player error
             // 100 = video not found
             // 101/150 = embed disabled (bloqueado por copyright/región)
-            console.error('[yt-player] error code:', e.data);
-            errorHandlersRef.current.forEach((cb) => cb(Number(e.data)));
+            console.error('[yt-player] error code:', e.data, 'video:', failedVideoId);
+            errorHandlersRef.current.forEach((cb) => cb(Number(e.data), failedVideoId));
           },
         },
       });
@@ -210,7 +228,7 @@ export function useYoutubePlayer(): {
       }
       // El contenedor seguro queda limpio para el siguiente mount
       if (containerRef.current) containerRef.current.innerHTML = '';
-      setState({ isReady: false, isPlaying: false, currentTimeSec: 0, durationSec: 0, apiError: null });
+      setState({ isReady: false, isPlaying: false, playerState: -1, currentTimeSec: 0, durationSec: 0, apiError: null });
     };
   }, []);
 
@@ -228,6 +246,7 @@ export function useYoutubePlayer(): {
     pause: () => safe('pauseVideo')?.call(playerRef.current),
     stop: () => safe('stopVideo')?.call(playerRef.current),
     load: (videoId, autoplay = true) => {
+      loadedVideoIdRef.current = videoId;
       const fn = autoplay ? safe('loadVideoById') : safe('cueVideoById');
       if (fn) (fn as (id: string) => void).call(playerRef.current, videoId);
       if (autoplay) {
@@ -253,7 +272,7 @@ export function useYoutubePlayer(): {
     return () => { endedHandlersRef.current.delete(cb); };
   };
 
-  const onError = (cb: (code: number) => void) => {
+  const onError = (cb: (code: number, videoId: string | null) => void) => {
     errorHandlersRef.current.add(cb);
     return () => { errorHandlersRef.current.delete(cb); };
   };

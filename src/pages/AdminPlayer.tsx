@@ -298,23 +298,42 @@ function PlayerSurface({ venue }: { venue: Venue }) {
     silenceMs: 1500,
   });
 
-  // ─── Auto-skip cuando YouTube bloquea el video ───
-  // Códigos 100 (no existe), 101/150 (embed deshabilitado/copyright/región)
-  useEffect(() => {
-    return active.onError((code) => {
-      if (code === 100 || code === 101 || code === 150) {
-        console.warn('[player] video blocked/unavailable, skipping. Code:', code);
-        if (nowPlaying) {
-          retiringItemRef.current = nowPlaying.id;
-          void setItemStatus(nowPlaying.id, 'skipped').then(() => {
-            loadedRef.current[activeSlot] = null;
-            preloadedNextRef.current = null;
-            void refresh();
-          });
-        }
-      }
+  // ─── Saltar un video por su id, venga de donde venga el aviso ───
+  const skipByVideoId = useCallback((videoId: string | null, motivo: string) => {
+    if (!videoId) return;
+    const item = nowPlaying?.track.youtubeVideoId === videoId
+      ? nowPlaying
+      : queued.find((q) => q.track.youtubeVideoId === videoId);
+    if (!item) return;
+    console.warn(`[player] ${motivo}: saltando "${item.track.title}"`);
+    if (item.id === nowPlaying?.id) retiringItemRef.current = item.id;
+    void setItemStatus(item.id, 'skipped').then(() => {
+      (['a', 'b'] as const).forEach((sl) => {
+        if (loadedRef.current[sl] === videoId) loadedRef.current[sl] = null;
+      });
+      if (preloadedNextRef.current === videoId) preloadedNextRef.current = null;
+      void refresh();
     });
-  }, [active, nowPlaying, activeSlot, refresh]);
+  }, [nowPlaying, queued, refresh]);
+
+  // ─── Auto-skip cuando YouTube bloquea el video ───
+  // Códigos 100 (no existe), 101/150 (embed deshabilitado/copyright/región).
+  //
+  // Se escucha en los DOS slots, no solo en el activo. El error de "embed
+  // bloqueado" salta cuando se CUEA el video durante la precarga — hasta 9s
+  // antes de que suene — y en ese momento el video vive en el slot standby.
+  // Escuchando solo al activo ese aviso se perdia, la cancion entraba igual y
+  // la TV se quedaba en "Video no disponible" para siempre.
+  useEffect(() => {
+    const onErr = (code: number, videoId: string | null) => {
+      if (code === 100 || code === 101 || code === 150) {
+        skipByVideoId(videoId, `video bloqueado (codigo ${code})`);
+      }
+    };
+    const offA = playerA.onError(onErr);
+    const offB = playerB.onError(onErr);
+    return () => { offA(); offB(); };
+  }, [playerA, playerB, skipByVideoId]);
 
   // ─── Stuck detection: si currentTime no avanza, asumimos bloqueo silencioso ───
   // Detecta el videoId que ESTÁ realmente cargado en el slot active (puede no
@@ -326,7 +345,12 @@ function PlayerSurface({ venue }: { venue: Venue }) {
   // hace falta: en pausa `currentTimeSec` deja de cambiar → el effect no vuelve
   // a correr → el reloj de stuck se queda clavado en el instante de la pausa, y
   // al reanudar `sinceProgress` vale toda la pausa y dispara un skip falso.
+  const YT_PAUSED = 2; // YT.PlayerState.PAUSED, sin depender del global
   const STUCK_TIMEOUT_MS = 5000;
+  // Arrancar tarda mas que seguir sonando: en el WiFi de un bar un video puede
+  // pasar varios segundos en BUFFERING sin estar roto. Se le da mas margen al
+  // caso "aun no empieza" que al caso "venia sonando y se congelo".
+  const STUCK_START_TIMEOUT_MS = 12000;
   const STUCK_PLAYBACK_OK_THRESHOLD_SEC = 5;
   const STUCK_MAX_CASCADE = 3;
   const STUCK_CHECK_MS = 1000;
@@ -346,13 +370,13 @@ function PlayerSurface({ venue }: { venue: Venue }) {
   // una sola vez y siempre vea el estado más reciente sin re-suscribirse.
   const stuckInputRef = useRef({
     showOverlay, activeSlot, nowPlaying, queued, refresh,
-    isPlaying: active.state.isPlaying,
+    state: active.state.playerState,
     currentTimeSec: active.state.currentTimeSec,
   });
   useEffect(() => {
     stuckInputRef.current = {
       showOverlay, activeSlot, nowPlaying, queued, refresh,
-      isPlaying: active.state.isPlaying,
+      state: active.state.playerState,
       currentTimeSec: active.state.currentTimeSec,
     };
   });
@@ -361,7 +385,7 @@ function PlayerSurface({ venue }: { venue: Venue }) {
     const check = () => {
       const {
         showOverlay: overlay, activeSlot: slot, nowPlaying: playing, queued: pending,
-        refresh: reload, isPlaying, currentTimeSec: t,
+        refresh: reload, state, currentTimeSec: t,
       } = stuckInputRef.current;
 
       if (overlay) {
@@ -382,10 +406,13 @@ function PlayerSurface({ venue }: { venue: Venue }) {
         return;
       }
 
-      // Si el player NO está reproduciendo (pausa manual, buffering, cued),
-      // congelamos el reloj de stuck: el video no avanza porque nadie le pidió
-      // que avance, no porque esté roto. Al reanudar, el timeout arranca de cero.
-      if (!isPlaying) {
+      // Solo la PAUSA congela el reloj. Antes se congelaba ante cualquier
+      // `!isPlaying`, y eso volvia indetectable el caso opuesto: un video
+      // bloqueado nunca llega a PLAYING, asi que el reloj quedaba congelado
+      // para siempre y la TV se quedaba clavada en "Video no disponible".
+      // UNSTARTED / CUED / BUFFERING significan "deberia estar sonando y no
+      // suena" — esos SI cuentan para el timeout.
+      if (state === YT_PAUSED) {
         stuckRef.current.lastTime = t;
         stuckRef.current.lastUpdate = now;
         stuckRef.current.loadedAt = now;
@@ -406,7 +433,7 @@ function PlayerSurface({ venue }: { venue: Venue }) {
       const sinceLoaded = now - stuckRef.current.loadedAt;
       const sinceProgress = now - stuckRef.current.lastUpdate;
 
-      if (!((t === 0 && sinceLoaded > STUCK_TIMEOUT_MS) || (t > 0 && sinceProgress > STUCK_TIMEOUT_MS))) {
+      if (!((t === 0 && sinceLoaded > STUCK_START_TIMEOUT_MS) || (t > 0 && sinceProgress > STUCK_TIMEOUT_MS))) {
         return;
       }
 
