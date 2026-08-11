@@ -310,9 +310,16 @@ function PlayerSurface({ venue }: { venue: Venue }) {
   // Detecta el videoId que ESTÁ realmente cargado en el slot active (puede no
   // coincidir con nowPlaying durante el window de switch tras un crossfade).
   // Para skipear, busca el item correcto entre nowPlaying/queued con ese videoId.
+  //
+  // IMPORTANTE: esto corre en su PROPIO interval, no como effect sobre
+  // `currentTimeSec`. Colgado del tiempo, el chequeo se apaga justo cuando más
+  // hace falta: en pausa `currentTimeSec` deja de cambiar → el effect no vuelve
+  // a correr → el reloj de stuck se queda clavado en el instante de la pausa, y
+  // al reanudar `sinceProgress` vale toda la pausa y dispara un skip falso.
   const STUCK_TIMEOUT_MS = 5000;
   const STUCK_PLAYBACK_OK_THRESHOLD_SEC = 5;
   const STUCK_MAX_CASCADE = 3;
+  const STUCK_CHECK_MS = 1000;
   const stuckRef = useRef<{ vid: string | null; lastTime: number; lastUpdate: number; loadedAt: number }>({
     vid: null,
     lastTime: 0,
@@ -324,53 +331,75 @@ function PlayerSurface({ venue }: { venue: Venue }) {
   // hay un problema sistémico (ad-blocker, red, browser policy) y vaciar
   // toda la cola no ayuda — el usuario debe intervenir.
   const cascadeRef = useRef(0);
+
+  // Snapshot de lo que el watchdog necesita leer, para que el interval se cree
+  // una sola vez y siempre vea el estado más reciente sin re-suscribirse.
+  const stuckInputRef = useRef({
+    showOverlay, activeSlot, nowPlaying, queued, refresh,
+    isPlaying: active.state.isPlaying,
+    currentTimeSec: active.state.currentTimeSec,
+  });
   useEffect(() => {
-    if (showOverlay) {
-      stuckRef.current.vid = null;
-      cascadeRef.current = 0;
-      return;
-    }
-    const slotVid = loadedRef.current[activeSlot];
-    if (!slotVid) {
-      stuckRef.current.vid = null;
-      return;
-    }
-    const now = Date.now();
-    const t = active.state.currentTimeSec;
+    stuckInputRef.current = {
+      showOverlay, activeSlot, nowPlaying, queued, refresh,
+      isPlaying: active.state.isPlaying,
+      currentTimeSec: active.state.currentTimeSec,
+    };
+  });
 
-    // Reset cuando cambia el video del slot
-    if (stuckRef.current.vid !== slotVid) {
-      stuckRef.current = { vid: slotVid, lastTime: 0, lastUpdate: now, loadedAt: now };
-      return;
-    }
+  useEffect(() => {
+    const check = () => {
+      const {
+        showOverlay: overlay, activeSlot: slot, nowPlaying: playing, queued: pending,
+        refresh: reload, isPlaying, currentTimeSec: t,
+      } = stuckInputRef.current;
 
-    // Si t cambió (avanzó, retrocedió por seek, o jitter): hay vida en el iframe.
-    // Antes usábamos `t > lastTime + 0.3` pero el threshold causaba falsos
-    // positivos cuando el tick caía justo abajo de 0.3s; cualquier cambio basta.
-    if (t !== stuckRef.current.lastTime) {
-      stuckRef.current.lastTime = t;
-      stuckRef.current.lastUpdate = now;
-      // Reproducción exitosa: reseteamos el contador de cascada.
-      if (t > STUCK_PLAYBACK_OK_THRESHOLD_SEC) cascadeRef.current = 0;
-      return;
-    }
+      if (overlay) {
+        stuckRef.current.vid = null;
+        cascadeRef.current = 0;
+        return;
+      }
+      const slotVid = loadedRef.current[slot];
+      if (!slotVid) {
+        stuckRef.current.vid = null;
+        return;
+      }
+      const now = Date.now();
 
-    // Si el player NO está reproduciendo (pausa manual, buffering, cued),
-    // congelamos el reloj de stuck. Sin esto, una pausa larga acumula
-    // sinceProgress y al reanudar dispara un skip inmediato (porque t no
-    // alcanzó a avanzar en el primer tick post-resume). Mismo motivo para
-    // loadedAt: si el user pausa antes de que arranque, no queremos que
-    // se gatille la rama `t === 0 && sinceLoaded > timeout`.
-    if (!active.state.isPlaying) {
-      stuckRef.current.lastUpdate = now;
-      stuckRef.current.loadedAt = now;
-      return;
-    }
+      // Reset cuando cambia el video del slot
+      if (stuckRef.current.vid !== slotVid) {
+        stuckRef.current = { vid: slotVid, lastTime: 0, lastUpdate: now, loadedAt: now };
+        return;
+      }
 
-    const sinceLoaded = now - stuckRef.current.loadedAt;
-    const sinceProgress = now - stuckRef.current.lastUpdate;
+      // Si el player NO está reproduciendo (pausa manual, buffering, cued),
+      // congelamos el reloj de stuck: el video no avanza porque nadie le pidió
+      // que avance, no porque esté roto. Al reanudar, el timeout arranca de cero.
+      if (!isPlaying) {
+        stuckRef.current.lastTime = t;
+        stuckRef.current.lastUpdate = now;
+        stuckRef.current.loadedAt = now;
+        return;
+      }
 
-    if ((t === 0 && sinceLoaded > STUCK_TIMEOUT_MS) || (t > 0 && sinceProgress > STUCK_TIMEOUT_MS)) {
+      // Si t cambió (avanzó, retrocedió por seek, o jitter): hay vida en el iframe.
+      // Antes usábamos `t > lastTime + 0.3` pero el threshold causaba falsos
+      // positivos cuando el tick caía justo abajo de 0.3s; cualquier cambio basta.
+      if (t !== stuckRef.current.lastTime) {
+        stuckRef.current.lastTime = t;
+        stuckRef.current.lastUpdate = now;
+        // Reproducción exitosa: reseteamos el contador de cascada.
+        if (t > STUCK_PLAYBACK_OK_THRESHOLD_SEC) cascadeRef.current = 0;
+        return;
+      }
+
+      const sinceLoaded = now - stuckRef.current.loadedAt;
+      const sinceProgress = now - stuckRef.current.lastUpdate;
+
+      if (!((t === 0 && sinceLoaded > STUCK_TIMEOUT_MS) || (t > 0 && sinceProgress > STUCK_TIMEOUT_MS))) {
+        return;
+      }
+
       // Circuit breaker: si ya fueron N auto-skips seguidos sin que ninguna
       // canción llegue a reproducirse >5s, bailamos. Vaciar toda la cola
       // automáticamente solo agrava un problema sistémico (CORS de ads,
@@ -386,9 +415,9 @@ function PlayerSurface({ venue }: { venue: Venue }) {
 
       // Buscar el item correspondiente al videoId cargado
       const stuckItem =
-        nowPlaying?.track.youtubeVideoId === slotVid
-          ? nowPlaying
-          : queued.find((q) => q.track.youtubeVideoId === slotVid);
+        playing?.track.youtubeVideoId === slotVid
+          ? playing
+          : pending.find((q) => q.track.youtubeVideoId === slotVid);
 
       if (!stuckItem) {
         console.warn('[player] stuck but no matching item found for', slotVid);
@@ -396,22 +425,22 @@ function PlayerSurface({ venue }: { venue: Venue }) {
       }
 
       cascadeRef.current++;
-      if (stuckItem.id === nowPlaying?.id) retiringItemRef.current = stuckItem.id;
+      if (stuckItem.id === playing?.id) retiringItemRef.current = stuckItem.id;
       console.warn(
         `[player] stuck "${stuckItem.track.title}" ` +
         `(t=${t.toFixed(2)}, sinceLoaded=${sinceLoaded}ms, cascade=${cascadeRef.current}/${STUCK_MAX_CASCADE}), auto-skipping`,
       );
       stuckRef.current.vid = null; // evitar doble skip
       void setItemStatus(stuckItem.id, 'skipped').then(() => {
-        loadedRef.current[activeSlot] = null;
+        loadedRef.current[slot] = null;
         preloadedNextRef.current = null;
-        void refresh();
+        void reload();
       });
-    }
-  }, [
-    active.state.currentTimeSec, active.state.isPlaying, nowPlaying, queued,
-    showOverlay, activeSlot, refresh,
-  ]);
+    };
+
+    const id = window.setInterval(check, STUCK_CHECK_MS);
+    return () => window.clearInterval(id);
+  }, []);
 
   // ─── Recibe comandos remotos del admin (cross-tab via socket.io) ───
   useReceivePlayerCommand(venue.id, (cmd) => {
