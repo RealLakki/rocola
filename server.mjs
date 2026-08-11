@@ -572,8 +572,18 @@ async function fetchLastfmValidationTags(track) {
   return [];
 }
 
+const isText = (v) => typeof v === 'string' && v.trim().length > 0;
+
 async function validateQueueRequest(venue, track) {
   if (!venue) return { ok: false, status: 404, error: 'venue not found' };
+
+  // Forma mínima del track. Sin esto se puede encolar cualquier objeto: la TV
+  // acaba llamando load(undefined) y se queda en negro hasta que el watchdog
+  // de stuck la salta. Además, un track sin título deja al guard de género sin
+  // nada que consultarle a Last.fm, y el guard es permisivo ante la duda.
+  if (!isText(track?.youtubeVideoId) || !isText(track?.title) || !isText(track?.providerId)) {
+    return { ok: false, status: 400, error: 'Cancion incompleta' };
+  }
   if (venue.blockedTrackIds?.includes(track?.providerId)) {
     return { ok: false, status: 403, error: 'Cancion bloqueada por el local' };
   }
