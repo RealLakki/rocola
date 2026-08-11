@@ -70,6 +70,13 @@ export interface PlayerState {
   isPlaying: boolean;
   currentTimeSec: number;
   durationSec: number;
+  /**
+   * Motivo por el que el reproductor nunca llegó a estar listo (la API de
+   * YouTube no cargó). Sin exponerlo, la TV se queda con el botón de iniciar
+   * deshabilitado y un "Cargando reproductor..." eterno, sin pista de que la
+   * causa es un bloqueador de anuncios o un WiFi que filtra youtube.com.
+   */
+  apiError: string | null;
 }
 
 export interface PlayerControls {
@@ -98,6 +105,7 @@ export function useYoutubePlayer(): {
     isPlaying: false,
     currentTimeSec: 0,
     durationSec: 0,
+    apiError: null,
   });
 
   useEffect(() => {
@@ -110,6 +118,15 @@ export function useYoutubePlayer(): {
         await whenApiReady();
       } catch (e) {
         console.error('[yt] aborting init:', e);
+        if (!destroyed) {
+          setState((s) => ({
+            ...s,
+            apiError:
+              'No se pudo cargar el reproductor de YouTube. Revisa la conexion ' +
+              'del televisor y desactiva bloqueadores de anuncios o extensiones ' +
+              'de privacidad en este navegador.',
+          }));
+        }
         return;
       }
       if (destroyed || !containerRef.current) {
@@ -193,7 +210,7 @@ export function useYoutubePlayer(): {
       }
       // El contenedor seguro queda limpio para el siguiente mount
       if (containerRef.current) containerRef.current.innerHTML = '';
-      setState({ isReady: false, isPlaying: false, currentTimeSec: 0, durationSec: 0 });
+      setState({ isReady: false, isPlaying: false, currentTimeSec: 0, durationSec: 0, apiError: null });
     };
   }, []);
 

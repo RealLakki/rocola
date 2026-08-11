@@ -67,6 +67,16 @@ function PlayerSurface({ venue }: { venue: Venue }) {
   const [muted, setMuted] = useState(false);
   const [showOverlay, setShowOverlay] = useState(true);
 
+  // Nivel de volumen vigente. Es un ref y no la constante TARGET_VOLUME porque
+  // el admin puede subirlo/bajarlo desde el control remoto: usando la constante,
+  // cada 'volume-up' aterrizaba en el mismo valor (no acumulaba) y el nivel
+  // elegido se perdía al cargar la siguiente canción.
+  const volumeRef = useRef(TARGET_VOLUME);
+  const nudgeVolume = useCallback((delta: number) => {
+    volumeRef.current = Math.max(0, Math.min(100, volumeRef.current + delta));
+    return volumeRef.current;
+  }, []);
+
   const active = activeSlot === 'a' ? playerA : playerB;
   const standby = activeSlot === 'a' ? playerB : playerA;
 
@@ -128,7 +138,7 @@ function PlayerSurface({ venue }: { venue: Venue }) {
     active.controls.load(vid, true);
     loadedRef.current[activeSlot] = vid;
     // Restaurar volumen target tras delay — el nuevo video ya tomó control
-    const targetVol = muted ? 0 : TARGET_VOLUME;
+    const targetVol = muted ? 0 : volumeRef.current;
     window.setTimeout(() => {
       if (loadedRef.current[activeSlot] === vid) {
         active.controls.setVolume(targetVol);
@@ -165,7 +175,7 @@ function PlayerSurface({ venue }: { venue: Venue }) {
     fadeCleanupRef.current = null;
 
     // B a volumen full (instantáneo, sin más fade)
-    standby.controls.setVolume(muted ? 0 : TARGET_VOLUME);
+    standby.controls.setVolume(muted ? 0 : volumeRef.current);
 
     // IMPORTANTE: NO llamar active.controls.stop(). Ya está en volumen 0
     // por el fade. Llamar stop() emite mensajes postMessage internos del
@@ -213,8 +223,8 @@ function PlayerSurface({ venue }: { venue: Venue }) {
     const interval = window.setInterval(() => {
       const elapsed = (Date.now() - startTime) / 1000;
       const t = Math.min(1, elapsed / CROSSFADE_DURATION_SEC);
-      active.controls.setVolume(Math.round(TARGET_VOLUME * fadeOutCurve(t)));
-      standby.controls.setVolume(muted ? 0 : Math.round(TARGET_VOLUME * fadeInCurve(t)));
+      active.controls.setVolume(Math.round(volumeRef.current * fadeOutCurve(t)));
+      standby.controls.setVolume(muted ? 0 : Math.round(volumeRef.current * fadeInCurve(t)));
       if (t >= 1) completeCrossfade();
     }, FADE_TICK_MS);
 
@@ -273,7 +283,7 @@ function PlayerSurface({ venue }: { venue: Venue }) {
   const handleToggleMute = useCallback(() => {
     setMuted((m) => {
       const next = !m;
-      active.controls.setVolume(next ? 0 : TARGET_VOLUME);
+      active.controls.setVolume(next ? 0 : volumeRef.current);
       return next;
     });
   }, [active]);
@@ -455,13 +465,13 @@ function PlayerSurface({ venue }: { venue: Venue }) {
         break;
       case 'unmute':
         setMuted(false);
-        active.controls.setVolume(TARGET_VOLUME);
+        active.controls.setVolume(volumeRef.current);
         break;
       case 'volume-up':
-        active.controls.setVolume(Math.min(100, TARGET_VOLUME + 10));
+        if (!muted) active.controls.setVolume(nudgeVolume(10));
         break;
       case 'volume-down':
-        active.controls.setVolume(Math.max(0, TARGET_VOLUME - 10));
+        if (!muted) active.controls.setVolume(nudgeVolume(-10));
         break;
     }
   });
@@ -539,11 +549,17 @@ function PlayerSurface({ venue }: { venue: Venue }) {
             <h1 className="text-4xl font-display italic text-ink mb-2 leading-tight">
               {venue.name}
             </h1>
-            <p className="text-ink-mute mb-8">
-              {playerA.state.isReady && playerB.state.isReady
-                ? 'Pulsa para activar el audio. Después es automático.'
-                : 'Cargando reproductor...'}
-            </p>
+            {playerA.state.apiError || playerB.state.apiError ? (
+              <p className="text-danger text-sm mb-8 leading-snug">
+                {playerA.state.apiError ?? playerB.state.apiError}
+              </p>
+            ) : (
+              <p className="text-ink-mute mb-8">
+                {playerA.state.isReady && playerB.state.isReady
+                  ? 'Pulsa para activar el audio. Después es automático.'
+                  : 'Cargando reproductor...'}
+              </p>
+            )}
             <NeonButton
               variant="primary"
               size="lg"
@@ -551,7 +567,7 @@ function PlayerSurface({ venue }: { venue: Venue }) {
               onClick={() => {
                 setShowOverlay(false);
                 if (nowPlaying) {
-                  active.controls.setVolume(TARGET_VOLUME);
+                  active.controls.setVolume(volumeRef.current);
                   active.controls.load(nowPlaying.track.youtubeVideoId, true);
                   loadedRef.current[activeSlot] = nowPlaying.track.youtubeVideoId;
                 }

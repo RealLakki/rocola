@@ -7,13 +7,14 @@ import { AdminPlayer } from './pages/AdminPlayer';
 import { AdminGate } from './components/admin/AdminGate';
 import { IntroSplash } from './components/common/IntroSplash';
 import { NeonBackground } from './components/common/NeonBackground';
+import { safeSession } from './utils/safeStorage';
 
 const INTRO_KEY = 'cantina:intro-shown';
 
 export function App() {
   const [introDone, setIntroDone] = useState(() => {
     if (typeof window === 'undefined') return true;
-    return sessionStorage.getItem(INTRO_KEY) === '1';
+    return safeSession.getItem(INTRO_KEY) === '1';
   });
 
   return (
@@ -22,7 +23,7 @@ export function App() {
       {!introDone && (
         <IntroSplash
           onDone={() => {
-            sessionStorage.setItem(INTRO_KEY, '1');
+            safeSession.setItem(INTRO_KEY, '1');
             setIntroDone(true);
           }}
         />

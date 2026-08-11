@@ -18,6 +18,7 @@ import { GuideTour, isTourDone, markTourDone } from '../components/customer/Guid
 import { enqueueTrack } from '../lib/api';
 import { extractYoutubeVideoId, isYoutubeProvidedTrack, resolveOnYoutube, youtubeUrlToTrack, ytTrackToResolved } from '../lib/youtube';
 import { getClientId, getClientName, setClientName } from '../utils/formatters';
+import { safeLocal } from '../utils/safeStorage';
 import type { TrackSearchResult, Venue } from '../lib/types';
 
 const COOLDOWN_KEY = (vid: string) => `cantina:lastReq:${vid}`;
@@ -54,7 +55,7 @@ function CustomerInner({ venue }: { venue: Venue }) {
   }, []);
 
   const cooldownRemaining = useCallback((): number => {
-    const last = Number(localStorage.getItem(COOLDOWN_KEY(venue.id)) ?? 0);
+    const last = Number(safeLocal.getItem(COOLDOWN_KEY(venue.id)) ?? 0);
     const elapsed = (Date.now() - last) / 1000;
     return Math.max(0, venue.requestCooldownSec - elapsed);
   }, [venue]);
@@ -89,7 +90,7 @@ function CustomerInner({ venue }: { venue: Venue }) {
           requestedBy: clientId,
           requestedByName: name || undefined,
         });
-        localStorage.setItem(COOLDOWN_KEY(venue.id), String(Date.now()));
+        safeLocal.setItem(COOLDOWN_KEY(venue.id), String(Date.now()));
         showToast('✨ Agregada a la cola', 'ok');
       } catch (e) {
         console.error(e);

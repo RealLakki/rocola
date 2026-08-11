@@ -1,3 +1,5 @@
+import { randomId, safeLocal, safeSession } from './safeStorage';
+
 export const formatDuration = (ms: number): string => {
   const total = Math.floor(ms / 1000);
   const m = Math.floor(total / 60);
@@ -17,18 +19,18 @@ export const joinArtists = (artists: string[]): string => artists.join(', ');
 /** Identidad opaca por dispositivo, persistida en sessionStorage. */
 export function getClientId(): string {
   const KEY = 'cantina:cid';
-  let id = sessionStorage.getItem(KEY);
+  let id = safeSession.getItem(KEY);
   if (!id) {
-    id = crypto.randomUUID();
-    sessionStorage.setItem(KEY, id);
+    id = randomId();
+    safeSession.setItem(KEY, id);
   }
   return id;
 }
 
 export function getClientName(): string | undefined {
-  return localStorage.getItem('cantina:cname') ?? undefined;
+  return safeLocal.getItem('cantina:cname') ?? undefined;
 }
 
 export function setClientName(name: string): void {
-  localStorage.setItem('cantina:cname', name.trim().slice(0, 24));
+  safeLocal.setItem('cantina:cname', name.trim().slice(0, 24));
 }
