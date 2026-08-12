@@ -24,6 +24,10 @@ const BLACK = [0, 0, 0];
 export const BRAND_1 = parseRgb(import.meta.env.VITE_B1, [168, 85, 247]);
 export const BRAND_2 = parseRgb(import.meta.env.VITE_B2, [34, 211, 238]);
 
+// Slug del venue de este deploy (cada negocio tiene el suyo). Default 'rocola'
+// para no romper el principal.
+export const VENUE_SLUG = import.meta.env.VITE_VENUE_SLUG || 'rocola';
+
 // Triples "R G B" para usar como rgb(var(--b1) / <alpha>) en CSS/Tailwind.
 const TRIPLES: Record<string, number[]> = {
   '--b1': BRAND_1,

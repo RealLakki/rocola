@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import gsap from 'gsap';
 import { AppLogo } from '../components/common/AppLogo';
 import { NeonButton } from '../components/common/NeonButton';
+import { VENUE_SLUG } from '../brand';
 
 /* ─── Scroll progress bar ─── */
 function ScrollProgressBar() {
@@ -185,7 +186,7 @@ export function Landing() {
           </span>
         </div>
         <Link
-          to="/admin/rocola"
+          to={`/admin/${VENUE_SLUG}`}
           className="text-ink-mute hover:text-gold transition-colors text-xs sm:text-sm font-heading tracking-wide uppercase"
         >
           Soy del local →
@@ -237,12 +238,12 @@ export function Landing() {
           ref={ctasRef}
           className="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 items-center justify-center w-full max-w-sm sm:max-w-none"
         >
-          <Link to="/v/rocola" className="w-full sm:w-auto">
+          <Link to={`/v/${VENUE_SLUG}`} className="w-full sm:w-auto">
             <NeonButton variant="primary" size="lg" className="w-full sm:w-auto">
               🔊 Ver demo
             </NeonButton>
           </Link>
-          <Link to="/admin/rocola" className="w-full sm:w-auto">
+          <Link to={`/admin/${VENUE_SLUG}`} className="w-full sm:w-auto">
             <NeonButton variant="ghost" size="lg" className="w-full sm:w-auto">
               Panel del local
             </NeonButton>
