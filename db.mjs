@@ -687,6 +687,8 @@ export async function ensureOperationalTables() {
     );
     create index if not exists house_tracks_active_genre
       on house_tracks (active, genre, last_picked_at);
+    alter table venues
+      add column if not exists blocked_genres text[] not null default '{}';
   `);
 
   for (const item of HOUSE_TRACKS) {
@@ -800,6 +802,7 @@ const mapVenue = (r) => ({
   slug: r.slug,
   name: r.name,
   allowedGenres: r.allowed_genres ?? [],
+  blockedGenres: r.blocked_genres ?? [],
   blockedTrackIds: r.blocked_track_ids ?? [],
   requestCooldownSec: r.request_cooldown_sec,
   allowExplicit: r.allow_explicit,
@@ -833,6 +836,7 @@ export async function getVenueById(id) {
 
 const VENUE_COLS = {
   allowedGenres: 'allowed_genres',
+  blockedGenres: 'blocked_genres',
   blockedTrackIds: 'blocked_track_ids',
   requestCooldownSec: 'request_cooldown_sec',
   allowExplicit: 'allow_explicit',

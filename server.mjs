@@ -407,6 +407,18 @@ const URBAN_ARTISTS = new Set([
   'bad gyal', 'w sound', 'lyanno', 'dei v', 'luar la l',
 ].map((n) => n.normalize('NFD').replace(/[̀-ͯ]/g, '')));
 
+// Lista negra de champeta (clásica + urbana). Last.fm casi no etiqueta champeta
+// —género de nicho costeño—, así que igual que con los urbanos se refuerza por
+// nombre de artista. Solo aplica en locales que bloquean 'champeta'.
+const CHAMPETA_ARTISTS = new Set([
+  'mr black', 'mister black', 'kevin florez', 'young f', 'twister el rey', 'twister',
+  'el afinaito', 'charles king', 'louis towers', 'mr stiven', 'el sayayin',
+  'papo man', 'anne swing', 'el john', 'elio boom', 'sergio liñan', 'sergio linan',
+  'alvaro el barbaro', 'viviano torres', 'anne zwing', 'eddy jay', 'bazurto all stars',
+  'rey de rocha', 'mr saik', 'mr saik y', 'young gaby', 'dc fatal', 'katrina',
+  'chawala', 'el pupy', 'el chawala', 'robert smith', 'melchor',
+].map((n) => n.normalize('NFD').replace(/[̀-ͯ]/g, '')));
+
 const GENRE_LASTFM_TAGS = {
   reggaeton: ['reggaeton', 'reggaetón', 'perreo', 'urbano', 'urbano latino', 'musica urbana', 'música urbana', 'urban latin', 'latin urban', 'trap latino', 'latin trap', 'reggaeton colombiano', 'reggaeton y hip-hop'],
   salsa: ['salsa', 'salsa colombiana', 'salsa cubana', 'salsa choke'],
@@ -466,6 +478,49 @@ function knownPopularArtist(artistName) {
 function knownUrbanArtist(artistName) {
   if (!artistName) return false;
   return URBAN_ARTISTS.has(normalizeGenreText(artistName));
+}
+
+// Match EXACTO (tras normalizar) contra la lista negra de champeta.
+function knownChampetaArtist(artistName) {
+  if (!artistName) return false;
+  return CHAMPETA_ARTISTS.has(normalizeGenreText(artistName));
+}
+
+// Géneros VETADOS: el local permite "todo" salvo estos. Se evalúa aunque
+// allowedGenres esté vacío. Devuelve true si el track cae en un género bloqueado.
+// PERMISIVO ante la duda: sin señal (ni artista conocido ni tags) NO bloquea.
+async function genreBlocked(blockedGenres, track) {
+  if (!blockedGenres?.length) return false;
+  const set = blockedGenres.map(normalizeGenreText);
+
+  // Refuerzo por artista para champeta (Last.fm apenas la clasifica).
+  if (set.includes('champeta')) {
+    const rawTitle = String(track?.title ?? '');
+    const pa = primaryArtist(track?.artists?.[0]);
+    const pt = /[-–—]/.test(rawTitle)
+      ? primaryArtist(rawTitle.split(/\s*[-–—]\s+|\s+[-–—]\s*/)[0])
+      : '';
+    if (knownChampetaArtist(pa) || knownChampetaArtist(pt)) return true;
+  }
+
+  // Tracks de la casa: usar el género curado, sin llamar a Last.fm.
+  const houseMatch = String(track?.providerId ?? '').match(/^house:([^:]+):/);
+  if (houseMatch) {
+    const curated = await db.getHouseTrackByProviderId(track.providerId);
+    return curated ? set.includes(normalizeGenreText(curated.genre)) : false;
+  }
+
+  // Resto: clasificar por tags de Last.fm y ver si cae en algún género vetado.
+  const tags = await fetchLastfmValidationTags(track);
+  if (tags.length === 0) return false;
+  for (const bg of blockedGenres) {
+    for (const myTag of GENRE_LASTFM_TAGS[bg] ?? []) {
+      for (const trackTag of tags) {
+        if (tagMatches(myTag, trackTag)) return true;
+      }
+    }
+  }
+  return false;
 }
 
 function genreAllowed(itunesGenre, allowedGenres) {
@@ -590,6 +645,13 @@ async function validateQueueRequest(venue, track) {
   if (venue.allowExplicit === false && track?.explicit === true) {
     return { ok: false, status: 403, error: 'Contenido explicito no permitido' };
   }
+
+  // Géneros VETADOS: se rechazan aunque el local permita "todo" (allowedGenres
+  // vacío). Ej.: Rocola B permite cualquier música salvo champeta.
+  if (venue.blockedGenres?.length && await genreBlocked(venue.blockedGenres, track)) {
+    return { ok: false, status: 422, error: 'Genero no permitido por el local' };
+  }
+
   if (!venue.allowedGenres || venue.allowedGenres.length === 0) return { ok: true };
 
   const houseMatch = String(track?.providerId ?? '').match(/^house:([^:]+):/);

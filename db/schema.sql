@@ -16,6 +16,7 @@ create table if not exists venues (
   slug                 text not null unique,
   name                 text not null,
   allowed_genres       text[] not null default '{}',
+  blocked_genres       text[] not null default '{}',
   blocked_track_ids    text[] not null default '{}',
   request_cooldown_sec integer not null default 60,
   allow_explicit       boolean not null default true,
