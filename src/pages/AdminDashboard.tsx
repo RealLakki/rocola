@@ -11,6 +11,7 @@ import { VenueSettings } from '../components/admin/VenueSettings';
 import { BlockedSongs } from '../components/admin/BlockedSongs';
 import { QrCodeCard } from '../components/admin/QrCodeCard';
 import { TopTracksCard } from '../components/admin/TopTracksCard';
+import { AdminSearch } from '../components/admin/AdminSearch';
 import { AnimatedLogo } from '../components/common/AnimatedLogo';
 import { AppLogo } from '../components/common/AppLogo';
 import { NeonButton } from '../components/common/NeonButton';
@@ -122,6 +123,18 @@ function DashboardInner({
               onRefresh={refreshQueue}
             />
           </GlowCard>
+
+          <AdminSearch
+            venue={venue}
+            onAddTrack={adminAddTrack}
+            disabledIds={
+              new Set([
+                ...queued.map((q) => q.track.providerId),
+                ...(nowPlaying ? [nowPlaying.track.providerId] : []),
+                ...venue.blockedTrackIds,
+              ])
+            }
+          />
 
           <TopTracksCard
             venueId={venue.id}
