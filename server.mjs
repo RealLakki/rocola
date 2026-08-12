@@ -417,6 +417,15 @@ const CHAMPETA_ARTISTS = new Set([
   'alvaro el barbaro', 'viviano torres', 'anne zwing', 'eddy jay', 'bazurto all stars',
   'rey de rocha', 'mr saik', 'mr saik y', 'young gaby', 'dc fatal', 'katrina',
   'chawala', 'el pupy', 'el chawala', 'robert smith', 'melchor',
+  // ampliación (champeta clásica, africana y urbana)
+  'ceerre', 'yon metropolitano', 'el rasta', 'deiby', 'kelly man', 'rey chape',
+  'el combo ganador', 'dever', 'dj dever', 'big yamo', 'lucas rios', 'lucas rios el hijo',
+  'justo valdes', 'abelardo carbono', 'melchor cruz', 'juan carlos coronel',
+  'wilo sanchez', 'el guiso', 'el pijuo', 'el moreno', 'el sayayin el original',
+  'mr rasta', 'young ali', 'joler', 'jhon jarvis', 'el pipe', 'los del pais',
+  'kevincho', 'yao', 'yeison landero', 'batata', 'son palenque', 'markito el vengador',
+  'el afinaito el original', 'mr black el presidente', 'young f el rey', 'kalox',
+  'los charros de la champeta', 'nando y su gente', 'el rey del pico',
 ].map((n) => n.normalize('NFD').replace(/[̀-ͯ]/g, '')));
 
 const GENRE_LASTFM_TAGS = {
@@ -493,7 +502,8 @@ async function genreBlocked(blockedGenres, track) {
   if (!blockedGenres?.length) return false;
   const set = blockedGenres.map(normalizeGenreText);
 
-  // Refuerzo por artista para champeta (Last.fm apenas la clasifica).
+  // Refuerzo para champeta (Last.fm apenas la clasifica): (1) lista negra de
+  // artistas y (2) la palabra "champeta" en título/artista (muchos uploads la traen).
   if (set.includes('champeta')) {
     const rawTitle = String(track?.title ?? '');
     const pa = primaryArtist(track?.artists?.[0]);
@@ -501,6 +511,8 @@ async function genreBlocked(blockedGenres, track) {
       ? primaryArtist(rawTitle.split(/\s*[-–—]\s+|\s+[-–—]\s*/)[0])
       : '';
     if (knownChampetaArtist(pa) || knownChampetaArtist(pt)) return true;
+    const hay = normalizeGenreText(`${rawTitle} ${(track?.artists ?? []).join(' ')}`);
+    if (/\bchampeta\b/.test(hay)) return true;
   }
 
   // Tracks de la casa: usar el género curado, sin llamar a Last.fm.
