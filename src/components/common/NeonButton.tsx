@@ -11,11 +11,11 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   icon?: React.ReactNode;
 }
 
-const PRIMARY_BG = 'bg-[linear-gradient(135deg,#C084FC_0%,#A855F7_55%,#7C3AED_100%)]';
+const PRIMARY_BG = 'bg-[linear-gradient(135deg,rgb(var(--b1-light))_0%,rgb(var(--b1))_55%,rgb(var(--b1-dim))_100%)]';
 
 const variantClasses: Record<Variant, string> = {
   primary:
-    `${PRIMARY_BG} text-[#0A0A14] font-bold border border-[#A855F7] shadow-gold hover:shadow-gold-lg hover:brightness-110 active:scale-[0.97]`,
+    `${PRIMARY_BG} text-[#0A0A14] font-bold border border-[rgb(var(--b1))] shadow-gold hover:shadow-gold-lg hover:brightness-110 active:scale-[0.97]`,
   ghost:
     'bg-[rgba(18,18,31,0.60)] text-ink border border-[rgba(58,42,24,0.55)] hover:border-gold hover:text-gold hover:shadow-gold-sm active:scale-[0.97]',
   danger:
@@ -51,7 +51,7 @@ export const NeonButton = forwardRef<HTMLButtonElement, Props>(function NeonButt
         position: absolute; left: ${e.clientX - rect.left - sz / 2}px;
         top: ${e.clientY - rect.top - sz / 2}px;
         width: ${sz}px; height: ${sz}px; border-radius: 9999px;
-        background: radial-gradient(circle, rgba(255,214,51,0.55) 0%, rgba(168,85,247,0) 70%);
+        background: radial-gradient(circle, rgba(255,214,51,0.55) 0%, rgb(var(--b1) / 0) 70%);
         pointer-events: none; transform: scale(0); opacity: 0.9;
       `;
       localRef.current.appendChild(ripple);

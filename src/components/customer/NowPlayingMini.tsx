@@ -17,14 +17,14 @@ export function NowPlayingMini({ nowPlaying }: Props) {
 
     // Entrada: sube + aparece + glow flash
     gsap.fromTo(ref.current,
-      { y: 10, opacity: 0, scale: 0.96, boxShadow: '0 0 0px rgba(168,85,247,0)' },
-      { y: 0,  opacity: 1, scale: 1,    boxShadow: '0 0 28px rgba(168,85,247,0.5)',
+      { y: 10, opacity: 0, scale: 0.96, boxShadow: '0 0 0px rgb(var(--b1) / 0)' },
+      { y: 0,  opacity: 1, scale: 1,    boxShadow: '0 0 28px rgb(var(--b1) / 0.5)',
         duration: 0.55, ease: 'back.out(1.6)' }
     );
 
     // Glow respiratorio continuo
     glowRef.current = gsap.to(ref.current, {
-      boxShadow: '0 0 48px rgba(168,85,247,0.85), 0 0 90px rgba(168,85,247,0.25)',
+      boxShadow: '0 0 48px rgb(var(--b1) / 0.85), 0 0 90px rgb(var(--b1) / 0.25)',
       duration: 1.6, yoyo: true, repeat: -1, ease: 'sine.inOut',
       delay: 0.6,
     });

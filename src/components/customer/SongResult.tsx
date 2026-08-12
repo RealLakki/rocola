@@ -29,13 +29,13 @@ export function SongResult({ track, disabled, disabledReason, onAdd }: Props) {
     if (cardRef.current) {
       gsap.timeline()
         .to(cardRef.current, {
-          borderColor: 'rgba(168,85,247,0.8)',
-          boxShadow: '0 0 22px rgba(168,85,247,0.5)',
+          borderColor: 'rgb(var(--b1) / 0.8)',
+          boxShadow: '0 0 22px rgb(var(--b1) / 0.5)',
           duration: 0.18, ease: 'power2.out',
         })
         .to(cardRef.current, {
-          borderColor: 'rgba(168,85,247,0.18)',
-          boxShadow: '0 0 0px rgba(168,85,247,0)',
+          borderColor: 'rgb(var(--b1) / 0.18)',
+          boxShadow: '0 0 0px rgb(var(--b1) / 0)',
           duration: 0.45, ease: 'power2.inOut',
         });
     }
@@ -47,7 +47,7 @@ export function SongResult({ track, disabled, disabledReason, onAdd }: Props) {
     <div
       ref={cardRef}
       className="group flex items-center gap-3 glass rounded-xl p-3 transition-colors"
-      style={{ border: '1px solid rgba(168,85,247,0.18)' }}
+      style={{ border: '1px solid rgb(var(--b1) / 0.18)' }}
     >
       <div className="relative w-14 h-14 rounded-lg overflow-hidden bg-base-elevated shrink-0">
         {track.imageUrl ? (

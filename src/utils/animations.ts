@@ -10,7 +10,7 @@ export const enterFromBottom = (
 
 export const goldPulse = (target: Element) =>
   gsap.to(target, {
-    boxShadow: '0 0 45px rgba(168,85,247,0.85), 0 0 90px rgba(168,85,247,0.30)',
+    boxShadow: '0 0 45px rgb(var(--b1) / 0.85), 0 0 90px rgb(var(--b1) / 0.30)',
     duration: 1.4, yoyo: true, repeat: -1, ease: 'sine.inOut',
   });
 

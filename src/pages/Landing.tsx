@@ -21,8 +21,8 @@ function ScrollProgressBar() {
         className="h-full transition-none"
         style={{
           width: `${pct}%`,
-          background: 'linear-gradient(90deg, #A855F7 0%, #C084FC 100%)',
-          boxShadow: '0 0 8px rgba(168,85,247,0.80)',
+          background: 'linear-gradient(90deg, rgb(var(--b1)) 0%, rgb(var(--b1-light)) 100%)',
+          boxShadow: '0 0 8px rgb(var(--b1) / 0.80)',
         }}
       />
     </div>
@@ -90,14 +90,14 @@ function FeatureCard({ step, icon, title, body }: {
       className="card-neon rounded-2xl p-5 sm:p-6 text-left"
       style={{
         background: 'rgba(18,18,31,0.80)',
-        border: '1px solid rgba(168,85,247,0.18)',
+        border: '1px solid rgb(var(--b1) / 0.18)',
       }}
     >
       <div className="flex items-center gap-3 mb-4">
         <span
           className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-heading font-bold shrink-0"
           style={{
-            background: 'linear-gradient(135deg, #C084FC 0%, #A855F7 100%)',
+            background: 'linear-gradient(135deg, rgb(var(--b1-light)) 0%, rgb(var(--b1)) 100%)',
             color: '#0A0A14',
           }}
         >
@@ -160,11 +160,11 @@ export function Landing() {
       {/* Glow ornamenta corner */}
       <div
         className="fixed -top-40 -left-40 w-80 h-80 rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(168,85,247,0.18) 0%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(circle, rgb(var(--b1) / 0.18) 0%, transparent 70%)' }}
       />
       <div
         className="fixed -bottom-40 -right-40 w-80 h-80 rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(168,85,247,0.10) 0%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(circle, rgb(var(--b1) / 0.10) 0%, transparent 70%)' }}
       />
 
       {/* ── NAVBAR ── */}
@@ -175,7 +175,7 @@ export function Landing() {
             ? 'rgba(10,10,20,0.92)'
             : 'transparent',
           backdropFilter: scrolled ? 'blur(16px)' : 'none',
-          borderBottom: scrolled ? '1px solid rgba(168,85,247,0.15)' : '1px solid transparent',
+          borderBottom: scrolled ? '1px solid rgb(var(--b1) / 0.15)' : '1px solid transparent',
         }}
       >
         <div className="flex items-center gap-2 sm:gap-3">
@@ -203,14 +203,14 @@ export function Landing() {
         <div ref={badgeRef} className="flex items-center gap-3 mb-5 sm:mb-6">
           <span
             className="block h-px w-8 sm:w-14"
-            style={{ background: 'linear-gradient(to right, transparent, #A855F7)' }}
+            style={{ background: 'linear-gradient(to right, transparent, rgb(var(--b1)))' }}
           />
           <span className="text-gold font-heading uppercase tracking-[0.24em] text-[10px] sm:text-[11px] whitespace-nowrap">
             Cartagena · Despecho & Popular
           </span>
           <span
             className="block h-px w-8 sm:w-14"
-            style={{ background: 'linear-gradient(to left, transparent, #A855F7)' }}
+            style={{ background: 'linear-gradient(to left, transparent, rgb(var(--b1)))' }}
           />
         </div>
 
@@ -259,7 +259,7 @@ export function Landing() {
           className="max-w-2xl mx-auto rounded-2xl"
           style={{
             background: 'rgba(18,18,31,0.70)',
-            border: '1px solid rgba(168,85,247,0.20)',
+            border: '1px solid rgb(var(--b1) / 0.20)',
           }}
         >
           <div className="grid grid-cols-3 divide-x divide-gold/10">
@@ -310,7 +310,7 @@ export function Landing() {
       {/* ── FOOTER ── */}
       <footer
         className="px-4 sm:px-6 py-6 sm:py-8 mt-4"
-        style={{ borderTop: '1px solid rgba(168,85,247,0.15)' }}
+        style={{ borderTop: '1px solid rgb(var(--b1) / 0.15)' }}
       >
         <div className="max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">

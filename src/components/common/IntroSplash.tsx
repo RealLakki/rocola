@@ -122,7 +122,7 @@ export function IntroSplash({ onDone, duration = 2000 }: Props) {
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            'radial-gradient(circle at center, rgba(168,85,247,0.22) 0%, rgba(18,18,31,0.96) 45%, #0A0A14 75%)',
+            'radial-gradient(circle at center, rgb(var(--b1) / 0.22) 0%, rgba(18,18,31,0.96) 45%, #0A0A14 75%)',
         }}
       />
 
@@ -132,7 +132,7 @@ export function IntroSplash({ onDone, duration = 2000 }: Props) {
         className="absolute w-32 h-32 rounded-full pointer-events-none"
         style={{
           background:
-            'radial-gradient(circle, rgba(255,220,80,0.95) 0%, rgba(168,85,247,0.60) 40%, transparent 80%)',
+            'radial-gradient(circle, rgba(255,220,80,0.95) 0%, rgb(var(--b1) / 0.60) 40%, transparent 80%)',
           filter: 'blur(6px)',
         }}
       />
@@ -151,7 +151,7 @@ export function IntroSplash({ onDone, duration = 2000 }: Props) {
               width: '2px',
               height: '300px',
               background:
-                'linear-gradient(to top, rgba(168,85,247,0) 0%, rgba(255,214,51,0.9) 50%, rgba(168,85,247,0) 100%)',
+                'linear-gradient(to top, rgb(var(--b1) / 0) 0%, rgba(255,214,51,0.9) 50%, rgb(var(--b1) / 0) 100%)',
               transform: `translate(-50%, -100%) rotate(${(360 / RAY_COUNT) * i}deg)`,
               transformOrigin: 'bottom center',
             }}
@@ -164,8 +164,8 @@ export function IntroSplash({ onDone, duration = 2000 }: Props) {
         ref={ringRef}
         className="absolute w-72 h-72 rounded-full pointer-events-none"
         style={{
-          border: '2px solid rgba(168,85,247,0.75)',
-          boxShadow: '0 0 30px rgba(168,85,247,0.50), inset 0 0 30px rgba(255,214,51,0.18)',
+          border: '2px solid rgb(var(--b1) / 0.75)',
+          boxShadow: '0 0 30px rgb(var(--b1) / 0.50), inset 0 0 30px rgba(255,214,51,0.18)',
         }}
       />
 
@@ -178,8 +178,8 @@ export function IntroSplash({ onDone, duration = 2000 }: Props) {
             style={{
               width: 4 + Math.random() * 3,
               height: 4 + Math.random() * 3,
-              background: i % 3 === 0 ? '#ECECFF' : i % 3 === 1 ? '#A855F7' : '#C084FC',
-              boxShadow: '0 0 8px rgba(168,85,247,0.85)',
+              background: i % 3 === 0 ? '#ECECFF' : i % 3 === 1 ? 'rgb(var(--b1))' : 'rgb(var(--b1-light))',
+              boxShadow: '0 0 8px rgb(var(--b1) / 0.85)',
               transform: 'translate(-50%, -50%)',
             }}
           />
@@ -190,7 +190,7 @@ export function IntroSplash({ onDone, duration = 2000 }: Props) {
       <div
         ref={logoWrapRef}
         className="relative z-10"
-        style={{ filter: 'drop-shadow(0 0 32px rgba(168,85,247,0.70))' }}
+        style={{ filter: 'drop-shadow(0 0 32px rgb(var(--b1) / 0.70))' }}
       >
         <AppLogo size={240} glow />
       </div>

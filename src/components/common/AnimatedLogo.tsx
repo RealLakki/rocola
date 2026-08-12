@@ -34,12 +34,12 @@ export function AnimatedLogo({ size = 64 }: Props) {
       width={size}
       height={size}
       viewBox="0 0 64 64"
-      style={{ filter: 'drop-shadow(0 0 10px rgba(168,85,247, 0.65))' }}
+      style={{ filter: 'drop-shadow(0 0 10px rgb(var(--b1) / 0.65))' }}
     >
       <defs>
         <linearGradient id="logoGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#C084FC" />
-          <stop offset="100%" stopColor="#7C3AED" />
+          <stop offset="0%" stopColor="rgb(var(--b1-light))" />
+          <stop offset="100%" stopColor="rgb(var(--b1-dim))" />
         </linearGradient>
       </defs>
       {[10, 22, 34, 46].map((x, i) => (

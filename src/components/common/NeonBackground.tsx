@@ -1,15 +1,19 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
+import { BRAND_1, BRAND_2 } from '../../brand';
 
 /**
- * Fondo animado con three.js — aurora neon (violeta / cian / rosa) que fluye,
- * generada en un fragment shader a pantalla completa. Barata (un solo quad),
- * fija detrás del contenido. Si WebGL no está disponible, no renderiza nada.
+ * Fondo animado con three.js — aurora neon con los DOS colores de marca del
+ * local (u_c1 / u_c2, ver src/brand.ts), generada en un fragment shader a
+ * pantalla completa. Barata (un solo quad), fija detrás del contenido.
+ * Si WebGL no está disponible, no renderiza nada.
  */
 const FRAG = /* glsl */ `
 precision highp float;
 uniform float u_time;
 uniform vec2  u_res;
+uniform vec3  u_c1;
+uniform vec3  u_c2;
 
 // hash + noise + fbm (value noise, barato)
 float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7)))*43758.5453); }
@@ -35,11 +39,9 @@ void main(){
   vec2 q = vec2(fbm(p*1.5 + t), fbm(p*1.5 - t + 4.0));
   float n = fbm(p*2.0 + q*1.8 + vec2(t*0.6, -t*0.4));
 
-  vec3 violet = vec3(0.66, 0.33, 0.97);
-  vec3 cyan   = vec3(0.13, 0.83, 0.93);
-  vec3 pink   = vec3(0.98, 0.17, 0.42);
-  vec3 col = mix(violet, cyan, smoothstep(0.25, 0.75, n));
-  col = mix(col, pink, smoothstep(0.62, 0.95, fbm(p*3.0 - t)) * 0.5);
+  // Aurora con los dos colores de marca; los picos vuelven al primario.
+  vec3 col = mix(u_c1, u_c2, smoothstep(0.25, 0.75, n));
+  col = mix(col, u_c1, smoothstep(0.62, 0.95, fbm(p*3.0 - t)) * 0.35);
 
   // concentra el brillo arriba, se apaga hacia abajo (fondo oscuro)
   float glow = pow(1.0 - uv.y, 1.6) * (0.35 + 0.65 * n);
@@ -79,6 +81,9 @@ export function NeonBackground({ className = '' }: { className?: string }) {
     const uniforms = {
       u_time: { value: 0 },
       u_res: { value: new THREE.Vector2(mount.clientWidth, mount.clientHeight) },
+      // Colores de marca normalizados (sRGB directo, sin gestión de color).
+      u_c1: { value: new THREE.Vector3(BRAND_1[0] / 255, BRAND_1[1] / 255, BRAND_1[2] / 255) },
+      u_c2: { value: new THREE.Vector3(BRAND_2[0] / 255, BRAND_2[1] / 255, BRAND_2[2] / 255) },
     };
     const mesh = new THREE.Mesh(
       new THREE.PlaneGeometry(2, 2),

@@ -99,8 +99,8 @@ export function GuideTour({ show, onDone }: Props) {
           className="max-w-xl mx-auto rounded-2xl p-4 sm:p-5"
           style={{
             background: 'rgba(18,18,31,0.97)',
-            border: '1px solid rgba(168,85,247,0.40)',
-            boxShadow: '0 -8px 40px rgba(168,85,247,0.15), 0 0 0 1px rgba(168,85,247,0.08)',
+            border: '1px solid rgb(var(--b1) / 0.40)',
+            boxShadow: '0 -8px 40px rgb(var(--b1) / 0.15), 0 0 0 1px rgb(var(--b1) / 0.08)',
           }}
         >
           {/* Barra de progreso + botón saltar */}
@@ -113,10 +113,10 @@ export function GuideTour({ show, onDone }: Props) {
                   style={{
                     width: i === step ? 22 : 6,
                     background: i === step
-                      ? '#A855F7'
+                      ? 'rgb(var(--b1))'
                       : i < step
-                      ? 'rgba(168,85,247,0.50)'
-                      : 'rgba(168,85,247,0.18)',
+                      ? 'rgb(var(--b1) / 0.50)'
+                      : 'rgb(var(--b1) / 0.18)',
                   }}
                 />
               ))}
@@ -137,7 +137,7 @@ export function GuideTour({ show, onDone }: Props) {
             <div className="text-4xl mb-3">{current.emoji}</div>
             <h2
               className="font-heading text-base sm:text-lg uppercase tracking-wide mb-2"
-              style={{ color: '#A855F7' }}
+              style={{ color: 'rgb(var(--b1))' }}
             >
               {current.title}
             </h2>
@@ -151,9 +151,9 @@ export function GuideTour({ show, onDone }: Props) {
             onClick={next}
             className="mt-4 sm:mt-5 w-full py-3 rounded-xl font-heading uppercase tracking-wider text-sm font-bold transition-all active:scale-[0.98]"
             style={{
-              background: 'linear-gradient(135deg, #C084FC 0%, #A855F7 55%, #7C3AED 100%)',
+              background: 'linear-gradient(135deg, rgb(var(--b1-light)) 0%, rgb(var(--b1)) 55%, rgb(var(--b1-dim)) 100%)',
               color: '#0A0A14',
-              boxShadow: '0 0 18px rgba(168,85,247,0.35)',
+              boxShadow: '0 0 18px rgb(var(--b1) / 0.35)',
             }}
           >
             {isLast ? '¡Listo, a pedir! 🔊' : 'Siguiente →'}

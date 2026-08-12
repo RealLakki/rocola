@@ -319,7 +319,7 @@ function YoutubeUrlInput({ onAddTrack }: { onAddTrack: (t: TrackSearchResult) =>
   return (
     <div
       className="rounded-xl p-3"
-      style={{ background: 'rgba(18,18,31,0.70)', border: '1px solid rgba(168,85,247,0.20)' }}
+      style={{ background: 'rgba(18,18,31,0.70)', border: '1px solid rgb(var(--b1) / 0.20)' }}
     >
       <p className="text-[10px] uppercase tracking-widest text-gold font-heading mb-2">
         ¿Tienes el link de YouTube?
@@ -350,8 +350,8 @@ function TipHint() {
     <div
       className="rounded-xl px-4 py-3 flex items-center gap-3"
       style={{
-        background: 'linear-gradient(135deg, rgba(168,85,247,0.12) 0%, rgba(18,18,31,0.75) 100%)',
-        border: '1px solid rgba(168,85,247,0.30)',
+        background: 'linear-gradient(135deg, rgb(var(--b1) / 0.12) 0%, rgba(18,18,31,0.75) 100%)',
+        border: '1px solid rgb(var(--b1) / 0.30)',
       }}
     >
       <span className="text-xl shrink-0">⚡</span>

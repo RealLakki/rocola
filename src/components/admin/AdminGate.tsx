@@ -75,7 +75,7 @@ export function AdminGate({ children }: Props) {
       {/* Glow ornamentales */}
       <div
         className="absolute -top-32 -left-32 w-96 h-96 rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(168,85,247,0.22) 0%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(circle, rgb(var(--b1) / 0.22) 0%, transparent 70%)' }}
       />
       <div
         className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full pointer-events-none"
@@ -87,8 +87,8 @@ export function AdminGate({ children }: Props) {
         className="relative w-full max-w-sm rounded-2xl p-8 text-center"
         style={{
           background: 'rgba(18,18,31, 0.92)',
-          border: '1px solid rgba(168,85,247, 0.35)',
-          boxShadow: '0 0 30px rgba(168,85,247, 0.18), 0 20px 60px rgba(0, 0, 0, 0.60)',
+          border: '1px solid rgb(var(--b1) / 0.35)',
+          boxShadow: '0 0 30px rgb(var(--b1) / 0.18), 0 20px 60px rgba(0, 0, 0, 0.60)',
           backdropFilter: 'blur(20px)',
         }}
       >
@@ -120,11 +120,11 @@ export function AdminGate({ children }: Props) {
               background: 'rgba(10, 10, 15, 0.75)',
               border: error
                 ? '1px solid rgba(182, 40, 40, 0.70)'
-                : '1px solid rgba(168,85,247, 0.35)',
+                : '1px solid rgb(var(--b1) / 0.35)',
               color: '#ECECFF',
               boxShadow: error
                 ? '0 0 14px rgba(182, 40, 40, 0.35)'
-                : 'inset 0 0 8px rgba(168,85,247, 0.10)',
+                : 'inset 0 0 8px rgb(var(--b1) / 0.10)',
             }}
           />
 
