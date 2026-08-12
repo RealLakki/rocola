@@ -21,6 +21,186 @@ const q = (text, params) => pool.query(text, params);
 
 const HOUSE_TRACKS = [
   {
+    genre: 'vallenato',
+    track: {
+      providerId: 'house:vallenato:diomedes-diaz:tu-eres-la-reina',
+      title: 'Tú Eres La Reina',
+      artists: ['Diomedes Díaz'],
+      durationMs: 253000,
+      imageUrl: 'https://i.ytimg.com/vi/uSG9ejcx7UM/hqdefault.jpg',
+      genres: ['Vallenato'],
+      explicit: false,
+      youtubeVideoId: 'uSG9ejcx7UM',
+      isOfficial: true,
+      hasVideo: true
+    }
+  },
+  {
+    genre: 'vallenato',
+    track: {
+      providerId: 'house:vallenato:jorge-celedon:que-bonita-es-esta-vida',
+      title: 'Que Bonita Es Esta Vida',
+      artists: ['Jorge Celedón'],
+      durationMs: 233000,
+      imageUrl: 'https://i.ytimg.com/vi/BudVsICXxF8/hqdefault.jpg',
+      genres: ['Vallenato'],
+      explicit: false,
+      youtubeVideoId: 'BudVsICXxF8',
+      isOfficial: false,
+      hasVideo: true
+    }
+  },
+  {
+    genre: 'vallenato',
+    track: {
+      providerId: 'house:vallenato:silvestre-dangond:niegame-tres-veces',
+      title: 'Niégame Tres Veces',
+      artists: ['Silvestre Dangond'],
+      durationMs: 398000,
+      imageUrl: 'https://i.ytimg.com/vi/xjWb_xeP1pA/hqdefault.jpg',
+      genres: ['Vallenato'],
+      explicit: false,
+      youtubeVideoId: 'xjWb_xeP1pA',
+      isOfficial: true,
+      hasVideo: true
+    }
+  },
+  {
+    genre: 'vallenato',
+    track: {
+      providerId: 'house:vallenato:binomio-de-oro:relicario-de-besos',
+      title: 'Relicario de Besos',
+      artists: ['Binomio de Oro'],
+      durationMs: 258000,
+      imageUrl: 'https://i.ytimg.com/vi/ssjANPLPqLM/hqdefault.jpg',
+      genres: ['Vallenato'],
+      explicit: false,
+      youtubeVideoId: 'ssjANPLPqLM',
+      isOfficial: false,
+      hasVideo: true
+    }
+  },
+  {
+    genre: 'vallenato',
+    track: {
+      providerId: 'house:vallenato:los-diablitos:sin-medir-distancias',
+      title: 'Sin Medir Distancias',
+      artists: ['Los Diablitos'],
+      durationMs: 296000,
+      imageUrl: 'https://i.ytimg.com/vi/XxkJSJc0ceE/hqdefault.jpg',
+      genres: ['Vallenato'],
+      explicit: false,
+      youtubeVideoId: 'XxkJSJc0ceE',
+      isOfficial: false,
+      hasVideo: true
+    }
+  },
+  {
+    genre: 'vallenato',
+    track: {
+      providerId: 'house:vallenato:peter-manjarres:la-diosa',
+      title: 'La Diosa',
+      artists: ['Peter Manjarrés'],
+      durationMs: 276000,
+      imageUrl: 'https://i.ytimg.com/vi/w17E8syCRyc/hqdefault.jpg',
+      genres: ['Vallenato'],
+      explicit: false,
+      youtubeVideoId: 'w17E8syCRyc',
+      isOfficial: false,
+      hasVideo: true
+    }
+  },
+  {
+    genre: 'salsa',
+    track: {
+      providerId: 'house:salsa:grupo-niche:cali-pachanguero',
+      title: 'Cali Pachanguero',
+      artists: ['Grupo Niche'],
+      durationMs: 291000,
+      imageUrl: 'https://i.ytimg.com/vi/7KxkMLAZlzw/hqdefault.jpg',
+      genres: ['Salsa'],
+      explicit: false,
+      youtubeVideoId: '7KxkMLAZlzw',
+      isOfficial: false,
+      hasVideo: true
+    }
+  },
+  {
+    genre: 'salsa',
+    track: {
+      providerId: 'house:salsa:joe-arroyo:la-rebelion',
+      title: 'La Rebelión',
+      artists: ['Joe Arroyo'],
+      durationMs: 285000,
+      imageUrl: 'https://i.ytimg.com/vi/oWBf9hfW_4Y/hqdefault.jpg',
+      genres: ['Salsa'],
+      explicit: false,
+      youtubeVideoId: 'oWBf9hfW_4Y',
+      isOfficial: false,
+      hasVideo: true
+    }
+  },
+  {
+    genre: 'salsa',
+    track: {
+      providerId: 'house:salsa:marc-anthony:vivir-mi-vida',
+      title: 'Vivir Mi Vida',
+      artists: ['Marc Anthony'],
+      durationMs: 327000,
+      imageUrl: 'https://i.ytimg.com/vi/YXnjy5YlDwk/hqdefault.jpg',
+      genres: ['Salsa'],
+      explicit: false,
+      youtubeVideoId: 'YXnjy5YlDwk',
+      isOfficial: true,
+      hasVideo: true
+    }
+  },
+  {
+    genre: 'salsa',
+    track: {
+      providerId: 'house:salsa:grupo-niche:una-aventura',
+      title: 'Una Aventura',
+      artists: ['Grupo Niche'],
+      durationMs: 360000,
+      imageUrl: 'https://i.ytimg.com/vi/UwnmzIgNzyU/hqdefault.jpg',
+      genres: ['Salsa'],
+      explicit: false,
+      youtubeVideoId: 'UwnmzIgNzyU',
+      isOfficial: false,
+      hasVideo: true
+    }
+  },
+  {
+    genre: 'salsa',
+    track: {
+      providerId: 'house:salsa:frankie-ruiz:la-cura',
+      title: 'La Cura',
+      artists: ['Frankie Ruiz'],
+      durationMs: 298000,
+      imageUrl: 'https://i.ytimg.com/vi/FLZqzmwdPGQ/hqdefault.jpg',
+      genres: ['Salsa'],
+      explicit: false,
+      youtubeVideoId: 'FLZqzmwdPGQ',
+      isOfficial: true,
+      hasVideo: true
+    }
+  },
+  {
+    genre: 'salsa',
+    track: {
+      providerId: 'house:salsa:willie-colon:idilio',
+      title: 'Idilio',
+      artists: ['Willie Colón'],
+      durationMs: 309000,
+      imageUrl: 'https://i.ytimg.com/vi/tUOQl42yoHU/hqdefault.jpg',
+      genres: ['Salsa'],
+      explicit: false,
+      youtubeVideoId: 'tUOQl42yoHU',
+      isOfficial: false,
+      hasVideo: true
+    }
+  },
+  {
     genre: 'popular',
     track: {
       providerId: 'house:popular:arelys-henao:amante-y-amigo',
@@ -28,12 +208,12 @@ const HOUSE_TRACKS = [
       artists: ['Arelys Henao'],
       durationMs: 185000,
       imageUrl: 'https://i.ytimg.com/vi/FpMmpJrQIJA/hqdefault.jpg',
-      genres: ['Música popular'],
+      genres: ['Popular'],
       explicit: false,
       youtubeVideoId: 'FpMmpJrQIJA',
       isOfficial: false,
-      hasVideo: true,
-    },
+      hasVideo: true
+    }
   },
   {
     genre: 'popular',
@@ -41,14 +221,14 @@ const HOUSE_TRACKS = [
       providerId: 'house:popular:luis-alberto-posada:me-tomas-y-me-dejas',
       title: 'Me Tomas y Me Dejas',
       artists: ['Luis Alberto Posada'],
-      durationMs: 203000,
-      imageUrl: 'https://i.ytimg.com/vi/JoSRCwCkan4/hqdefault.jpg',
-      genres: ['Música popular'],
+      durationMs: 204000,
+      imageUrl: 'https://i.ytimg.com/vi/arG8TDXEq74/hqdefault.jpg',
+      genres: ['Popular'],
       explicit: false,
-      youtubeVideoId: 'JoSRCwCkan4',
+      youtubeVideoId: 'arG8TDXEq74',
       isOfficial: false,
-      hasVideo: false,
-    },
+      hasVideo: true
+    }
   },
   {
     genre: 'popular',
@@ -58,12 +238,57 @@ const HOUSE_TRACKS = [
       artists: ['Jessi Uribe'],
       durationMs: 180000,
       imageUrl: 'https://i.ytimg.com/vi/-b21-NCfNzM/hqdefault.jpg',
-      genres: ['Música popular'],
+      genres: ['Popular'],
       explicit: false,
       youtubeVideoId: '-b21-NCfNzM',
       isOfficial: false,
-      hasVideo: true,
-    },
+      hasVideo: true
+    }
+  },
+  {
+    genre: 'popular',
+    track: {
+      providerId: 'house:popular:dario-gomez:nadie-es-eterno',
+      title: 'Nadie Es Eterno',
+      artists: ['Darío Gómez'],
+      durationMs: 208000,
+      imageUrl: 'https://i.ytimg.com/vi/YIo5Rq8ptFU/hqdefault.jpg',
+      genres: ['Popular'],
+      explicit: false,
+      youtubeVideoId: 'YIo5Rq8ptFU',
+      isOfficial: false,
+      hasVideo: true
+    }
+  },
+  {
+    genre: 'popular',
+    track: {
+      providerId: 'house:popular:jhonny-rivera:es-tan-dificil',
+      title: 'Es Tan Difícil',
+      artists: ['Jhonny Rivera'],
+      durationMs: 158000,
+      imageUrl: 'https://i.ytimg.com/vi/CJQJFLy0cpo/hqdefault.jpg',
+      genres: ['Popular'],
+      explicit: false,
+      youtubeVideoId: 'CJQJFLy0cpo',
+      isOfficial: false,
+      hasVideo: true
+    }
+  },
+  {
+    genre: 'popular',
+    track: {
+      providerId: 'house:popular:yeison-jimenez:aventurero',
+      title: 'Aventurero',
+      artists: ['Yeison Jiménez'],
+      durationMs: 198000,
+      imageUrl: 'https://i.ytimg.com/vi/n6zvD8kA3z4/hqdefault.jpg',
+      genres: ['Popular'],
+      explicit: false,
+      youtubeVideoId: 'n6zvD8kA3z4',
+      isOfficial: false,
+      hasVideo: true
+    }
   },
   {
     genre: 'ranchera',
@@ -77,8 +302,8 @@ const HOUSE_TRACKS = [
       explicit: false,
       youtubeVideoId: 'Zy89cMj4W68',
       isOfficial: true,
-      hasVideo: false,
-    },
+      hasVideo: true
+    }
   },
   {
     genre: 'ranchera',
@@ -86,14 +311,44 @@ const HOUSE_TRACKS = [
       providerId: 'house:ranchera:vicente-fernandez:volver-volver',
       title: 'Volver Volver',
       artists: ['Vicente Fernández'],
-      durationMs: 181000,
-      imageUrl: 'https://i.ytimg.com/vi/mmS_sqZBXVQ/hqdefault.jpg',
+      durationMs: 178000,
+      imageUrl: 'https://i.ytimg.com/vi/NPg_jbGYzgA/hqdefault.jpg',
       genres: ['Ranchera'],
       explicit: false,
-      youtubeVideoId: 'mmS_sqZBXVQ',
+      youtubeVideoId: 'NPg_jbGYzgA',
       isOfficial: true,
-      hasVideo: false,
-    },
+      hasVideo: true
+    }
+  },
+  {
+    genre: 'ranchera',
+    track: {
+      providerId: 'house:ranchera:vicente-fernandez:el-rey',
+      title: 'El Rey',
+      artists: ['Vicente Fernández'],
+      durationMs: 138000,
+      imageUrl: 'https://i.ytimg.com/vi/U6qMQnNst9U/hqdefault.jpg',
+      genres: ['Ranchera'],
+      explicit: false,
+      youtubeVideoId: 'U6qMQnNst9U',
+      isOfficial: true,
+      hasVideo: true
+    }
+  },
+  {
+    genre: 'ranchera',
+    track: {
+      providerId: 'house:ranchera:alejandro-fernandez:como-quien-pierde-una-estrella',
+      title: 'Como Quien Pierde una Estrella',
+      artists: ['Alejandro Fernández'],
+      durationMs: 224000,
+      imageUrl: 'https://i.ytimg.com/vi/MXlwuZ_nEk0/hqdefault.jpg',
+      genres: ['Ranchera'],
+      explicit: false,
+      youtubeVideoId: 'MXlwuZ_nEk0',
+      isOfficial: true,
+      hasVideo: true
+    }
   },
   {
     genre: 'ranchera',
@@ -101,119 +356,89 @@ const HOUSE_TRACKS = [
       providerId: 'house:ranchera:pedro-infante:cielito-lindo',
       title: 'Cielito Lindo',
       artists: ['Pedro Infante'],
-      durationMs: 184000,
-      imageUrl: 'https://i.ytimg.com/vi/HPF44uH3M88/hqdefault.jpg',
+      durationMs: 190000,
+      imageUrl: 'https://i.ytimg.com/vi/U5RC3BJ2PMo/hqdefault.jpg',
       genres: ['Ranchera'],
       explicit: false,
-      youtubeVideoId: 'HPF44uH3M88',
+      youtubeVideoId: 'U5RC3BJ2PMo',
       isOfficial: false,
-      hasVideo: true,
-    },
+      hasVideo: true
+    }
   },
   {
-    genre: 'banda',
+    genre: 'merengue',
     track: {
-      providerId: 'house:banda:banda-ms:el-color-de-tus-ojos',
-      title: 'El Color de Tus Ojos',
-      artists: ['Banda MS'],
-      durationMs: 249000,
-      imageUrl: 'https://i.ytimg.com/vi/Mfv1thwO0hw/hqdefault.jpg',
-      genres: ['Banda'],
+      providerId: 'house:merengue:juan-luis-guerra:la-bilirrubina',
+      title: 'La Bilirrubina',
+      artists: ['Juan Luis Guerra'],
+      durationMs: 233000,
+      imageUrl: 'https://i.ytimg.com/vi/McV4pBRb-Sg/hqdefault.jpg',
+      genres: ['Merengue'],
       explicit: false,
-      youtubeVideoId: 'Mfv1thwO0hw',
+      youtubeVideoId: 'McV4pBRb-Sg',
       isOfficial: true,
-      hasVideo: true,
-    },
+      hasVideo: true
+    }
   },
   {
-    genre: 'banda',
+    genre: 'merengue',
     track: {
-      providerId: 'house:banda:arrolladora:el-ruido-de-tus-zapatos',
-      title: 'El Ruido de Tus Zapatos',
-      artists: ['La Arrolladora Banda El Limón'],
-      durationMs: 266000,
-      imageUrl: 'https://i.ytimg.com/vi/aR5f59K8R5w/hqdefault.jpg',
-      genres: ['Banda'],
+      providerId: 'house:merengue:elvis-crespo:suavemente',
+      title: 'Suavemente',
+      artists: ['Elvis Crespo'],
+      durationMs: 269000,
+      imageUrl: 'https://i.ytimg.com/vi/WPiEbYSF9kE/hqdefault.jpg',
+      genres: ['Merengue'],
       explicit: false,
-      youtubeVideoId: 'aR5f59K8R5w',
+      youtubeVideoId: 'WPiEbYSF9kE',
       isOfficial: true,
-      hasVideo: true,
-    },
+      hasVideo: true
+    }
   },
   {
-    genre: 'banda',
+    genre: 'merengue',
     track: {
-      providerId: 'house:banda:banda-ms:mi-mayor-anhelo',
-      title: 'Mi Mayor Anhelo',
-      artists: ['Banda MS'],
-      durationMs: 218000,
-      imageUrl: 'https://i.ytimg.com/vi/WmlJHCzvs_Y/hqdefault.jpg',
-      genres: ['Banda'],
+      providerId: 'house:merengue:wilfrido-vargas:el-baile-del-perrito',
+      title: 'El Baile del Perrito',
+      artists: ['Wilfrido Vargas'],
+      durationMs: 241000,
+      imageUrl: 'https://i.ytimg.com/vi/fs1Fg07CsQs/hqdefault.jpg',
+      genres: ['Merengue'],
       explicit: false,
-      youtubeVideoId: 'WmlJHCzvs_Y',
+      youtubeVideoId: 'fs1Fg07CsQs',
       isOfficial: false,
-      hasVideo: true,
-    },
+      hasVideo: true
+    }
   },
   {
-    genre: 'corridos',
+    genre: 'merengue',
     track: {
-      providerId: 'house:corridos:tigres-del-norte:la-puerta-negra',
-      title: 'La Puerta Negra',
-      artists: ['Los Tigres del Norte'],
-      durationMs: 203000,
-      imageUrl: 'https://i.ytimg.com/vi/rryDND06LHU/hqdefault.jpg',
-      genres: ['Corridos'],
+      providerId: 'house:merengue:los-hermanos-rosario:morena',
+      title: 'Morena',
+      artists: ['Los Hermanos Rosario'],
+      durationMs: 268000,
+      imageUrl: 'https://i.ytimg.com/vi/NakaWu2BXa4/hqdefault.jpg',
+      genres: ['Merengue'],
       explicit: false,
-      youtubeVideoId: 'rryDND06LHU',
-      isOfficial: true,
-      hasVideo: true,
-    },
-  },
-  {
-    genre: 'corridos',
-    track: {
-      providerId: 'house:corridos:eslabon-peso-pluma:ella-baila-sola',
-      title: 'Ella Baila Sola',
-      artists: ['Eslabon Armado', 'Peso Pluma'],
-      durationMs: 166000,
-      imageUrl: 'https://i.ytimg.com/vi/7WNwGkgjKV8/hqdefault.jpg',
-      genres: ['Corridos'],
-      explicit: false,
-      youtubeVideoId: '7WNwGkgjKV8',
+      youtubeVideoId: 'NakaWu2BXa4',
       isOfficial: false,
-      hasVideo: true,
-    },
+      hasVideo: true
+    }
   },
   {
-    genre: 'corridos',
+    genre: 'merengue',
     track: {
-      providerId: 'house:corridos:natanael-cano:disfruto-lo-malo',
-      title: 'Disfruto Lo Malo',
-      artists: ['Natanael Cano'],
-      durationMs: 202000,
-      imageUrl: 'https://i.ytimg.com/vi/1VsfWqiSBBg/hqdefault.jpg',
-      genres: ['Corridos'],
+      providerId: 'house:merengue:eddy-herrera:pegame-tu-vicio',
+      title: 'Pégame Tu Vicio',
+      artists: ['Eddy Herrera'],
+      durationMs: 299000,
+      imageUrl: 'https://i.ytimg.com/vi/yWSQxGppcFA/hqdefault.jpg',
+      genres: ['Merengue'],
       explicit: false,
-      youtubeVideoId: '1VsfWqiSBBg',
+      youtubeVideoId: 'yWSQxGppcFA',
       isOfficial: false,
-      hasVideo: true,
-    },
-  },
-  {
-    genre: 'corridos',
-    track: {
-      providerId: 'house:corridos:el-fantasma:soy-buen-amigo',
-      title: 'Soy Buen Amigo',
-      artists: ['El Fantasma'],
-      durationMs: 156000,
-      imageUrl: 'https://i.ytimg.com/vi/cPKAmxB4tzk/hqdefault.jpg',
-      genres: ['Corridos'],
-      explicit: false,
-      youtubeVideoId: 'cPKAmxB4tzk',
-      isOfficial: false,
-      hasVideo: false,
-    },
+      hasVideo: true
+    }
   },
 ];
 
