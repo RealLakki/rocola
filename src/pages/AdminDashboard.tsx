@@ -6,7 +6,6 @@ import { QueueManager } from '../components/admin/QueueManager';
 import { enqueueTrack } from '../lib/api';
 import { isYoutubeProvidedTrack, resolveOnYoutube, ytTrackToResolved } from '../lib/youtube';
 import type { TrackSearchResult, Venue } from '../lib/types';
-import { GenreSettings } from '../components/admin/GenreSettings';
 import { VenueSettings } from '../components/admin/VenueSettings';
 import { BlockedSongs } from '../components/admin/BlockedSongs';
 import { QrCodeCard } from '../components/admin/QrCodeCard';
@@ -147,7 +146,6 @@ function DashboardInner({
               ])
             }
           />
-          <GenreSettings venue={venue} onUpdate={patchVenue} />
           <BlockedSongs venue={venue} onUpdate={patchVenue} />
         </section>
 

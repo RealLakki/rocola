@@ -2,10 +2,15 @@
 import QRCode from 'qrcode';
 import { GlowCard } from '../common/GlowCard';
 import { NeonButton } from '../common/NeonButton';
+import { BRAND_1 } from '../../brand';
 
 interface Props {
   slug: string;
 }
+
+// La librería `qrcode` solo acepta HEX (no variables CSS). Convertimos el color
+// de marca primario a hex para el QR.
+const brandHex = '#' + BRAND_1.map((c) => c.toString(16).padStart(2, '0')).join('');
 
 export function QrCodeCard({ slug }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -18,7 +23,7 @@ export function QrCodeCard({ slug }: Props) {
       QRCode.toCanvas(canvasRef.current, u, {
         width: 220,
         margin: 1,
-        color: { dark: 'rgb(var(--b1))', light: '#00000000' },
+        color: { dark: brandHex, light: '#FFFFFF' },
       });
     }
   }, [slug]);
