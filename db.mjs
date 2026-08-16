@@ -162,10 +162,10 @@ const HOUSE_TRACKS = [
       title: 'Una Aventura',
       artists: ['Grupo Niche'],
       durationMs: 360000,
-      imageUrl: 'https://i.ytimg.com/vi/UwnmzIgNzyU/hqdefault.jpg',
+      imageUrl: 'https://i.ytimg.com/vi/4WYxv09j03U/hqdefault.jpg',
       genres: ['Salsa'],
       explicit: false,
-      youtubeVideoId: 'UwnmzIgNzyU',
+      youtubeVideoId: '4WYxv09j03U',
       isOfficial: false,
       hasVideo: true
     }
