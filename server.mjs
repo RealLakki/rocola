@@ -867,7 +867,11 @@ app.get('/api/house-track', dataLimiter, async (req, res) => {
       .split(',')
       .map((id) => id.trim())
       .filter(Boolean);
-    const excludes = new Set(excludeProviderIds);
+    // Excluir de una las canciones bloqueadas por el local: si no, el autofill
+    // las elige (quedan como "las menos escuchadas" porque nunca suenan),
+    // valida -> rechazo -> y con suficientes bloqueadas agota los 8 intentos
+    // y devuelve null = la automatica se queda en silencio.
+    const excludes = new Set([...excludeProviderIds, ...(venue.blockedTrackIds ?? [])]);
 
     for (let attempt = 0; attempt < 8; attempt++) {
       const track = await db.getRandomHouseTrack({
