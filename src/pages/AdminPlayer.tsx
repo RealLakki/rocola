@@ -370,6 +370,12 @@ function PlayerSurface({ venue }: { venue: Venue }) {
   // hay un problema sistémico (ad-blocker, red, browser policy) y vaciar
   // toda la cola no ayuda — el usuario debe intervenir.
   const cascadeRef = useRef(0);
+  // Auto-recuperación: en vez de rendirse para siempre cuando se traba (pantalla
+  // en negro por adblock/conexión), reintenta cada RECOVERY_COOLDOWN_MS y avisa
+  // en pantalla. Si el problema pasa, la música se recupera sola.
+  const RECOVERY_COOLDOWN_MS = 20000;
+  const cascadeTrippedAtRef = useRef(0);
+  const [systemicIssue, setSystemicIssue] = useState(false);
 
   // Snapshot de lo que el watchdog necesita leer, para que el interval se cree
   // una sola vez y siempre vea el estado más reciente sin re-suscribirse.
@@ -430,8 +436,13 @@ function PlayerSurface({ venue }: { venue: Venue }) {
       if (t !== stuckRef.current.lastTime) {
         stuckRef.current.lastTime = t;
         stuckRef.current.lastUpdate = now;
-        // Reproducción exitosa: reseteamos el contador de cascada.
-        if (t > STUCK_PLAYBACK_OK_THRESHOLD_SEC) cascadeRef.current = 0;
+        // Reproducción exitosa: reseteamos el contador de cascada y salimos del
+        // modo de recuperación (ocultamos el aviso).
+        if (t > STUCK_PLAYBACK_OK_THRESHOLD_SEC) {
+          cascadeRef.current = 0;
+          cascadeTrippedAtRef.current = 0;
+          setSystemicIssue(false);
+        }
         return;
       }
 
@@ -447,12 +458,26 @@ function PlayerSurface({ venue }: { venue: Venue }) {
       // automáticamente solo agrava un problema sistémico (CORS de ads,
       // ad-blocker bloqueando iframe, browser que freezó el tab, etc.).
       if (cascadeRef.current >= STUCK_MAX_CASCADE) {
-        console.error(
-          `[player] cascada de stuck (${cascadeRef.current} skips seguidos). ` +
-          `Auto-skip desactivado hasta el próximo cambio. Pulsa Play manualmente.`,
-        );
-        stuckRef.current.vid = null; // dejar de chequear hasta el próximo load
-        return;
+        // Problema sistémico (muy probablemente adblock o conexión). En vez de
+        // rendirse para siempre, avisamos en pantalla y REINTENTAMOS cada
+        // RECOVERY_COOLDOWN_MS: si el problema pasa, la música vuelve sola.
+        if (cascadeTrippedAtRef.current === 0) {
+          cascadeTrippedAtRef.current = now;
+          console.error(
+            `[player] cascada de stuck (${cascadeRef.current} skips). Probable adblock ` +
+            `o conexión. Auto-recuperación: reintento cada ${RECOVERY_COOLDOWN_MS / 1000}s.`,
+          );
+        }
+        setSystemicIssue(true);
+        // Durante el cooldown no spameamos skips; esperamos.
+        if (now - cascadeTrippedAtRef.current < RECOVERY_COOLDOWN_MS) {
+          stuckRef.current.vid = null;
+          return;
+        }
+        // Cooldown cumplido: permitir UN reintento (cae al skip de abajo).
+        console.warn('[player] auto-recuperación: reintentando reproducción');
+        cascadeRef.current = 0;
+        cascadeTrippedAtRef.current = now;
       }
 
       // Buscar el item correspondiente al videoId cargado
@@ -544,6 +569,24 @@ function PlayerSurface({ venue }: { venue: Venue }) {
         hudVisible || showOverlay ? '' : 'cursor-none',
       ].join(' ')}
     >
+      {/* Aviso de problema sistémico (adblock/conexión) con auto-recuperación */}
+      {systemicIssue && !showOverlay && (
+        <div
+          role="alert"
+          style={{
+            position: 'absolute', top: 0, left: 0, right: 0, zIndex: 40,
+            background: 'linear-gradient(180deg, rgba(180,20,20,0.96), rgba(140,15,15,0.92))',
+            color: '#fff', padding: '14px 20px', textAlign: 'center',
+            fontSize: 'clamp(14px, 2vw, 20px)', fontWeight: 600, lineHeight: 1.35,
+            textShadow: '0 1px 2px rgba(0,0,0,.5)', boxShadow: '0 6px 20px rgba(0,0,0,.4)',
+          }}
+        >
+          ⚠️ El video se está trabando — casi siempre es un <b>bloqueador de anuncios (adblock)</b> o la conexión.
+          <br />
+          Abre la rocola en un <b>navegador sin extensiones</b> (o desactiva el adblock). Reintentando solo…
+        </div>
+      )}
+
       {/* Slot A */}
       <div
         ref={playerA.containerRef}
