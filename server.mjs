@@ -793,7 +793,16 @@ app.get('/api/venues', dataLimiter, async (req, res) => {
 
 app.patch('/api/venues/:id', dataLimiter, async (req, res) => {
   try {
-    const venue = await db.updateVenue(req.params.id, req.body ?? {});
+    const patch = { ...(req.body ?? {}) };
+    // Las canciones de la casa (autofill) NO se pueden bloquear: si se bloquean,
+    // el relleno automatico se queda sin catalogo y la reproduccion se cae.
+    // Se filtran aqui, de forma autoritativa, aunque el front intente mandarlas.
+    if (Array.isArray(patch.blockedTrackIds)) {
+      patch.blockedTrackIds = patch.blockedTrackIds.filter(
+        (id) => !String(id).startsWith('house:'),
+      );
+    }
+    const venue = await db.updateVenue(req.params.id, patch);
     if (!venue) return res.status(404).json({ error: 'venue not found' });
     emitVenue(venue.id, 'venue:changed');
     res.json(venue);

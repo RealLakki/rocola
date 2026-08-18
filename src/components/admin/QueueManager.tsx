@@ -26,6 +26,10 @@ export function QueueManager({ venue, queued, nowPlaying, onVenueUpdate, onRefre
       .then(() => onVenueUpdate({ blockedTrackIds: next }));
   };
 
+  // Las canciones de la casa (autofill) NO se pueden bloquear: bloquearlas deja
+  // al relleno automatico sin catalogo y la reproduccion se cae/queda en negro.
+  const isHouse = (providerId: string) => String(providerId).startsWith('house:');
+
   return (
     <div className="space-y-2">
       {nowPlaying && (
@@ -74,18 +78,20 @@ export function QueueManager({ venue, queued, nowPlaying, onVenueUpdate, onRefre
             >
               +
             </NeonButton>
-            <NeonButton
-              size="sm"
-              variant="ghost"
-              onClick={() => {
-                blockTrack(nowPlaying.track.providerId);
-                sendCommand('skip');
-                void after(setItemStatus(nowPlaying.id, 'skipped'));
-              }}
-              title="Bloquear esta canción para siempre + saltar"
-            >
-              ⛔
-            </NeonButton>
+            {!isHouse(nowPlaying.track.providerId) && (
+              <NeonButton
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  blockTrack(nowPlaying.track.providerId);
+                  sendCommand('skip');
+                  void after(setItemStatus(nowPlaying.id, 'skipped'));
+                }}
+                title="Bloquear esta canción para siempre + saltar"
+              >
+                ⛔
+              </NeonButton>
+            )}
             <NeonButton
               size="sm"
               variant="danger"
@@ -150,14 +156,16 @@ export function QueueManager({ venue, queued, nowPlaying, onVenueUpdate, onRefre
                 ⚡
               </NeonButton>
             )}
-            <NeonButton
-              size="sm"
-              variant="ghost"
-              onClick={() => blockTrack(item.track.providerId)}
-              title="Bloquear esta canción para siempre"
-            >
-              ⛔
-            </NeonButton>
+            {!isHouse(item.track.providerId) && (
+              <NeonButton
+                size="sm"
+                variant="ghost"
+                onClick={() => blockTrack(item.track.providerId)}
+                title="Bloquear esta canción para siempre"
+              >
+                ⛔
+              </NeonButton>
+            )}
             <NeonButton
               size="sm"
               variant="danger"
